@@ -17,9 +17,12 @@ direction_t get_random_direction()
     }
 }
 
-void set_random_coordinate(coordinate_t *coord)
+coordinate_t get_random_coordinate()
 {
-    coord->x = rand() % GAME_WIDTH;
-    coord->y = rand() % GAME_HEIGHT;
-    coord->direction = get_random_direction();
+    coordinate_t coord;
+    coord.x = rand() % GAME_WIDTH;
+    coord.y = rand() % GAME_HEIGHT;
+    coord.direction = get_random_direction();
+
+    return coord;
 }

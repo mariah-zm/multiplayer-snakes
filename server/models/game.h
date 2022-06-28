@@ -6,6 +6,7 @@
 #include "../servercore/servercore.h"
 #include "snake.h"
 
+#define EMPTY           0
 #define FRUIT           100 
 #define MAX_PLAYERS     1000
 
@@ -20,13 +21,19 @@ void game_loop(game_t *game);
 
 game_t *create_game();
 
-void remove_snake(game_t *game, size_t player_num);
+void remove_player(game_t *game, snake_t *snake);
 
-void place_snake(game_t *game, snake_t *snake);
+snake_t *add_player(game_t *game, int player_num);
 
-void add_fruit_callback();
+void add_fruit(game_t *game);
 
-void update_map_coordinate(game_t *game, coordinate_t *coord, int value);
+void update_map_coordinate(game_t *game, coordinate_t const *coord, int value);
+
+int value_at_coordindate(game_t const *game, coordinate_t const *coord);
+
+bool is_coord_valid(game_t const *game, coordinate_t const *coord, int type);
+
+bool is_isolated(game_t const *game, coordinate_t const *coord);
 
 void reset_game(game_t *game);
 

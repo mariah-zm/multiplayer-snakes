@@ -24,6 +24,6 @@ typedef struct coordinate
 
 direction_t get_random_direction();
 
-void set_random_coordinate(coordinate_t *coord);
+coordinate_t get_random_coordinate();
 
 #endif

@@ -1,12 +1,11 @@
 #include "snake.h"
 
-snake_t *create_snake(size_t player_num)
+snake_t *create_snake(size_t player_num, coordinate_t const *head)
 {
     snake_t *snake = malloc(sizeof(snake_t));
     snake->player_num = player_num;
     snake->length = 2;
-
-    set_random_coordinate(&snake->head);
+    snake->head = *head;
 
     snake->tail.direction = snake->head.direction;
 

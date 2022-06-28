@@ -4,7 +4,7 @@
 
 void game_loop(game_t *game)
 {
-    
+
 }
 
 game_t *create_game()
@@ -13,38 +13,135 @@ game_t *create_game()
     game->num_players = 0;
     game->is_running = true;
 
+    // Setting places in map as all empty
+    for (size_t y = 0; y < GAME_HEIGHT; ++y)
+        for (size_t x = 0; x < GAME_WIDTH; ++x)
+            game->map[y][x] = EMPTY;
+
     return game;
 }
 
-void remove_snake(game_t *game, snake_t *snake)
+void remove_player(game_t *game, snake_t *snake)
 {
     // Removing snake from map
-    game->map[snake->head.y][snake->head.x] = 0;
-    game->map[snake->tail.y][snake->tail.x] = 0;
+    update_map_coordinate(game, &snake->head, EMPTY);
+    update_map_coordinate(game, &snake->tail, EMPTY);
     for (size_t idx = 0; idx < snake->length-2; ++idx)
-        game->map[snake->body[idx].y][snake->body[idx].x] = 0;
+        update_map_coordinate(game, &snake->body[idx], EMPTY);
 
     destroy_snake(snake);
 
     --game->num_players;
 }
 
-void place_snake(game_t *game, snake_t *snake)
+snake_t *add_player(game_t *game, int player_num)
 {
-    // Adding snake to map
-    game->map[snake->head.y][snake->head.x] = snake->player_num;
-    game->map[snake->tail.y][snake->tail.x] = snake->player_num;
-    for (size_t idx = 0; idx < snake->length-2; ++idx)
-        game->map[snake->body[idx].y][snake->body[idx].x] = snake->player_num;
+    // Getting position of snake's head
+    coordinate_t head = get_random_coordinate();
+
+    while (is_coord_valid(game, &head, player_num))
+        head = get_random_coordinate();
+
+    // Creating snake
+    snake_t *snake = create_snake(player_num, &head);
+
+    // Placing snake on map
+    update_map_coordinate(game, &snake->head, snake->player_num);
+    update_map_coordinate(game, &snake->tail, snake->player_num);
+
+    return snake;
 }
 
-void update_map_coordinate(game_t *game, coordinate_t *coord, int value)
+void add_fruit(game_t *game)
 {
+    coordinate_t coordinate = get_random_coordinate();
 
+    while (!is_coord_valid(game, &coordinate, FRUIT))
+        coordinate = get_random_coordinate();
+    
+    update_map_coordinate(game, &coordinate, FRUIT);
+}
+
+void update_map_coordinate(game_t *game, coordinate_t const *coord, int value)
+{
+    game->map[coord->y][coord->x] = value;
+}
+
+int value_at_coordindate(game_t const *game, coordinate_t const *coord)
+{
+    return game->map[coord->y][coord->x];
+}
+
+bool is_coord_valid(game_t const *game, coordinate_t const *coord, int type)
+{
+    int value = value_at_coordindate(game, coord);
+
+    if (value != EMPTY)
+        return false;
+    // Otherwise it's empty so good
+    else if (type == FRUIT)
+    {
+        // Fruit must not be at border and away from 
+        if (coord->x == 0 || coord->x == GAME_WIDTH 
+            || coord->y == 0 || coord->y == GAME_HEIGHT
+            || !is_isolated(game, coord))
+            return false;
+    }
+    // Otherwise type is a player's number which means coordinate is head
+    else 
+    {
+        // Snake's head must not be facing a border and must be away from
+        // other snakes/fruits
+        if ((coord->direction == UP && coord->y == 0)
+            || (coord->direction == DOWN && coord->y == GAME_HEIGHT)
+            || (coord->direction == LEFT && coord->x == 0)
+            || (coord->direction == RIGHT && coord->x == GAME_WIDTH)
+            || !is_isolated(game, coord))
+            return false;
+    }
+
+    return true;
+}
+
+bool is_isolated(game_t const *game, coordinate_t const *coord)
+{
+    size_t y = coord->y;
+    size_t x = coord->x;
+
+    // Checking left/up
+    while (y >= 0 && y >= coord->y - 2)
+    {
+        while (x >= 0 && x >= coord->x - 2)
+        {
+            if (game->map[y][x] != EMPTY)
+                return false;
+            --x;
+        }
+        --y;
+    }
+
+    y = coord->y;
+    x = coord->x;
+
+    // Checking right/down
+    while (y < GAME_HEIGHT && y <= coord->y + 2)
+    {
+        while (x < GAME_WIDTH && x <= coord->x + 2)
+        {
+            if (game->map[y][x] != EMPTY)
+                return false;
+            ++x;
+        }
+        ++y;
+    }
 }
 
 void reset_game(game_t *game)
 {
     game->num_players = 0;
     game->is_running = true;
+
+    for (size_t y = 0; y < GAME_HEIGHT; ++y)
+        for (size_t x = 0; x < GAME_WIDTH; ++x)
+            game->map[y][x] = EMPTY;   
 }

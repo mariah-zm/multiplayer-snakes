@@ -5,14 +5,14 @@
 
 typedef struct snake 
 {
-    size_t player_num;
+    int player_num;
     size_t length;
     coordinate_t head;
     coordinate_t tail;
     coordinate_t body[MAX_SNAKE_LEN-2];
 } snake_t;
 
-snake_t *create_snake(size_t player_num);
+snake_t *create_snake(int player_num, coordinate_t const *head);
 
 void destroy_snake(snake_t *snake);
 
