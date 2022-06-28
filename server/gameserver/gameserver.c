@@ -69,6 +69,9 @@ void accept_clients(void)
 
 void *game_loop(void *player_fd)
 {
+    int player_num = (int) player_fd;
+
+    add_player(game, player_num);
 
 }
 

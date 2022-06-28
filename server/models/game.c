@@ -1,12 +1,16 @@
 #include "game.h"
 
-// TODO synchronise game for different threads
-
 game_t *create_game(void)
 {
+    // Locks are not rquired in this function as this new instance only exists
+    // in this function
+
     game_t *game = malloc(sizeof(game_t));
     game->num_players = 0;
     game->is_running = true;
+
+    if (pthread_mutex_init(&game->lock, NULL) != 0)
+        exit_error("ERR: failed to initialise mutex for game map");
 
     // Setting places in map as all empty
     for (size_t y = 0; y < GAME_HEIGHT; ++y)
@@ -30,7 +34,9 @@ void remove_player(game_t *game, snake_t *snake)
 
     destroy_snake(snake);
 
+    pthread_mutex_lock(&game->lock);
     --game->num_players;
+    pthread_mutex_unlock(&game->lock);
 }
 
 snake_t *add_player(game_t *game, int player_num)
@@ -48,6 +54,10 @@ snake_t *add_player(game_t *game, int player_num)
     update_map_coordinate(game, &snake->head, snake->player_num);
     update_map_coordinate(game, &snake->tail, snake->player_num);
 
+    pthread_mutex_lock(&game->lock);
+    ++game->num_players;
+    pthread_mutex_unlock(&game->lock);
+
     return snake;
 }
 
@@ -63,7 +73,9 @@ void add_fruit(game_t *game)
 
 void update_map_coordinate(game_t *game, coordinate_t const *coord, int value)
 {
+    pthread_mutex_lock(&game->lock);
     game->map[coord->y][coord->x] = value;
+    pthread_mutex_unlock(&game->lock);
 }
 
 int value_at_coordindate(game_t const *game, coordinate_t const *coord)
@@ -137,10 +149,14 @@ bool is_isolated(game_t const *game, coordinate_t const *coord)
 
 void reset_game(game_t *game)
 {
+    pthread_mutex_lock(&game->lock);
+
     game->num_players = 0;
     game->is_running = true;
-
+    
     for (size_t y = 0; y < GAME_HEIGHT; ++y)
         for (size_t x = 0; x < GAME_WIDTH; ++x)
             game->map[y][x] = EMPTY;   
+
+    pthread_mutex_unlock(&game->lock);
 }

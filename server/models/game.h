@@ -1,7 +1,8 @@
 #ifndef INCLUDED_GAME_
 #define INCLUDED_GAME_
 
-#include<stdbool.h>  
+#include <stdbool.h> 
+#include <pthread.h> 
 
 #include "../servercore/servercore.h"
 #include "snake.h"
@@ -12,6 +13,7 @@
 
 typedef struct game 
 {
+    pthread_mutex_t lock;
     size_t map[GAME_HEIGHT][GAME_WIDTH];
     size_t num_players;
     bool is_running;
