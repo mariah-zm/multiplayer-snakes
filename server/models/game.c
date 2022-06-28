@@ -90,26 +90,9 @@ bool is_coord_valid(game_t const *game, coordinate_t const *coord, int type)
     if (value != EMPTY)
         return false;
     // Otherwise it's empty so good
-    else if (type == FRUIT)
-    {
-        // Fruit must not be at border and away from 
-        if (coord->x == 0 || coord->x == GAME_WIDTH 
-            || coord->y == 0 || coord->y == GAME_HEIGHT
-            || !is_isolated(game, coord))
-            return false;
-    }
-    // Otherwise type is a player's number which means coordinate is head
     else 
-    {
-        // Snake's head must not be facing a border and must be away from
-        // other snakes/fruits
-        if ((coord->direction == UP && coord->y == 0)
-            || (coord->direction == DOWN && coord->y == GAME_HEIGHT)
-            || (coord->direction == LEFT && coord->x == 0)
-            || (coord->direction == RIGHT && coord->x == GAME_WIDTH)
-            || !is_isolated(game, coord))
-            return false;
-    }
+        // fruit/players must be away from other fruit/players
+        return is_isolated(game, coord); 
 
     return true;
 }
@@ -145,6 +128,8 @@ bool is_isolated(game_t const *game, coordinate_t const *coord)
         }
         ++y;
     }
+
+    return true;
 }
 
 void reset_game(game_t *game)
