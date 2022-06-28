@@ -17,9 +17,7 @@ typedef struct game
     bool is_running;
 } game_t;
 
-void game_loop(game_t *game);
-
-game_t *create_game();
+game_t *create_game(void);
 
 void remove_player(game_t *game, snake_t *snake);
 

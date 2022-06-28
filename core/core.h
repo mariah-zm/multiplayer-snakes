@@ -17,4 +17,8 @@
 #define DOWN_KEY        'S'
 #define RIGHT_KEY       'D'
 
+void print_error(char *msg);
+
+void exit_error(char *msg);
+
 #endif

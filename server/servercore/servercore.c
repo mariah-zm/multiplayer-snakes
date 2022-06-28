@@ -1,6 +1,6 @@
 #include "servercore.h"
 
-direction_t get_random_direction()
+direction_t get_random_direction(void)
 {
     int rand_num = rand() % 4;
 
@@ -12,12 +12,12 @@ direction_t get_random_direction()
             return LEFT;
         case 2:
             return DOWN;
-        default:
+        default:            // case 3
             return RIGHT;
     }
 }
 
-coordinate_t get_random_coordinate()
+coordinate_t get_random_coordinate(void)
 {
     coordinate_t coord;
     coord.x = rand() % GAME_WIDTH;

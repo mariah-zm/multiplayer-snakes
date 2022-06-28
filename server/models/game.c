@@ -2,12 +2,7 @@
 
 // TODO synchronise game for different threads
 
-void game_loop(game_t *game)
-{
-
-}
-
-game_t *create_game()
+game_t *create_game(void)
 {
     game_t *game = malloc(sizeof(game_t));
     game->num_players = 0;
@@ -17,6 +12,10 @@ game_t *create_game()
     for (size_t y = 0; y < GAME_HEIGHT; ++y)
         for (size_t x = 0; x < GAME_WIDTH; ++x)
             game->map[y][x] = EMPTY;
+
+    // Adding 3 fruit
+    for (size_t i = 0; i < 3; ++i)
+        add_fruit(game);
 
     return game;
 }
