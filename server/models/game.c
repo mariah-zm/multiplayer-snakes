@@ -7,14 +7,15 @@ game_t *create_game(void)
 
     game_t *game = malloc(sizeof(game_t));
     game->num_players = 0;
+    game->snakes_size = 0;
     game->is_running = true;
 
     if (pthread_mutex_init(&game->lock, NULL) != 0)
         exit_error("ERR: failed to initialise mutex for game map");
 
     // Setting places in map as all empty
-    for (size_t y = 0; y < GAME_HEIGHT; ++y)
-        for (size_t x = 0; x < GAME_WIDTH; ++x)
+    for (size_t y = 0; y < MAP_HEIGHT; ++y)
+        for (size_t x = 0; x < MAP_WIDTH; ++x)
             game->map[y][x] = EMPTY;
 
     // Adding 3 fruit
@@ -56,6 +57,8 @@ snake_t *add_player(game_t *game, int player_num)
 
     pthread_mutex_lock(&game->lock);
     ++game->num_players;
+    game->snakes[game->snakes_size] = snake;
+    ++game->snakes_size;
     pthread_mutex_unlock(&game->lock);
 
     return snake;
@@ -118,9 +121,9 @@ bool is_isolated(game_t const *game, coordinate_t const *coord)
     x = coord->x;
 
     // Checking right/down
-    while (y < GAME_HEIGHT && y <= coord->y + 2)
+    while (y < MAP_HEIGHT && y <= coord->y + 2)
     {
-        while (x < GAME_WIDTH && x <= coord->x + 2)
+        while (x < MAP_WIDTH && x <= coord->x + 2)
         {
             if (game->map[y][x] != EMPTY)
                 return false;
@@ -132,6 +135,17 @@ bool is_isolated(game_t const *game, coordinate_t const *coord)
     return true;
 }
 
+bool is_direction_valid(direction_t current_dir, direction_t next_dir)
+{
+    if ((current_dir == DOWN && !next_dir == UP)
+            || (current_dir == UP && !next_dir == DOWN)
+            || (current_dir == RIGHT && !next_dir == LEFT)
+            || (current_dir == LEFT && !next_dir == RIGHT))
+        return true;
+    
+    return false;
+}
+
 void reset_game(game_t *game)
 {
     pthread_mutex_lock(&game->lock);
@@ -139,9 +153,14 @@ void reset_game(game_t *game)
     game->num_players = 0;
     game->is_running = true;
     
-    for (size_t y = 0; y < GAME_HEIGHT; ++y)
-        for (size_t x = 0; x < GAME_WIDTH; ++x)
-            game->map[y][x] = EMPTY;   
+    for (size_t y = 0; y < MAP_HEIGHT; ++y)
+        for (size_t x = 0; x < MAP_WIDTH; ++x)
+            game->map[y][x] = EMPTY;
+
+    for (size_t i = 0; i < game->snakes_size; ++i)
+        free(game->snakes[i]);
+
+    game->snakes_size = 0;
 
     pthread_mutex_unlock(&game->lock);
 }

@@ -21,8 +21,8 @@ coordinate_t get_random_coordinate(void)
 {
     coordinate_t coord;
     // Generating random location away from border
-    coord.x = rand() % (GAME_WIDTH - 4) + 2;
-    coord.y = rand() % (GAME_HEIGHT - 4) + 2;
+    coord.x = rand() % (MAP_WIDTH - 4) + 2;
+    coord.y = rand() % (MAP_HEIGHT - 4) + 2;
     coord.direction = get_random_direction();
 
     return coord;

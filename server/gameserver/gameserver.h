@@ -9,7 +9,11 @@ void close_game_server(void);
 
 void accept_clients(void);
 
-void *game_loop(void *player_fd);
+void send_one(char *map_buffer, int client_fd);
+
+void send_all();
+
+void *handle_client_connection(void *player_fd);
 
 void make_detached_thread(void* (*fn)(void *), void* arg);
 

@@ -5,7 +5,7 @@
 
 #include "../core/core.h"
 
-#define MAX_SNAKE_LEN   (GAME_HEIGHT*GAME_WIDTH)
+#define MAX_SNAKE_LEN   15
 
 typedef enum direction
 {

@@ -14,9 +14,11 @@
 typedef struct game 
 {
     pthread_mutex_t lock;
-    size_t map[GAME_HEIGHT][GAME_WIDTH];
+    size_t map[MAP_HEIGHT][MAP_WIDTH];
     size_t num_players;
     bool is_running;
+    snake_t *snakes[MAX_PLAYERS];
+    size_t snakes_size;
 } game_t;
 
 game_t *create_game(void);
@@ -34,6 +36,8 @@ int value_at_coordindate(game_t const *game, coordinate_t const *coord);
 bool is_coord_valid(game_t const *game, coordinate_t const *coord, int type);
 
 bool is_isolated(game_t const *game, coordinate_t const *coord);
+
+bool is_direction_valid(direction_t current_dir, direction_t next_dir);
 
 void reset_game(game_t *game);
 

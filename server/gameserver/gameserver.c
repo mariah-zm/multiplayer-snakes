@@ -32,6 +32,9 @@ void init_game_server(game_t *game_p)
 		close(server_socket_fd);
         exit_error("ERR: could not bind server socket");
 	}
+
+    // Start listening for clients
+    listen(server_socket_fd, 5);
 }
 
 void close_game_server(void)
@@ -41,13 +44,10 @@ void close_game_server(void)
 
 void accept_clients(void)
 { 
-	// Start listening for clients
-    listen(server_socket_fd, 5);
-
     size_t client_num = 0;
     socklen_t client_len = sizeof(struct sockaddr_in);
 
-    while (true)
+    while (game->is_running)
     {
         // Accept incoming connection
         client_socket_fds[client_num] = accept(server_socket_fd, 
@@ -57,22 +57,69 @@ void accept_clients(void)
             print_error("ERR: could not accept connection request");
         else 
         {
-            // Check winner
-
             // Handle game loop for player in separate thread
-            make_detached_thread(&game_loop, &client_socket_fds[client_num]); 
+            make_detached_thread(&handle_client_connection, 
+                                    &client_socket_fds[client_num]); 
 
             ++client_num;
         }
     }
 }
 
-void *game_loop(void *player_fd)
+void send_one(char *map_buffer, int client_fd)
 {
-    int player_num = (int) player_fd;
+    size_t bytes_sent = 0;
 
-    add_player(game, player_num);
+    while(bytes_sent < MAP_SIZE)
+    {         
+        bytes_sent += write(client_fd, map_buffer, MAP_SIZE);
+        if (bytes_sent < 0) 
+            print_error("ERR: failed to write to client socket");
+    } 
+}
 
+void send_all()
+{
+    char map_buffer[MAP_SIZE];
+    memcpy(map_buffer, game->map, MAP_SIZE);
+
+    for (int i = 0; i < game->snakes_size; ++i)
+    {
+        if (game->snakes[i] != NULL)
+            send_one(map_buffer, client_socket_fds[i]);
+    }
+}
+
+void *handle_client_connection(void *player_fd)
+{
+    char key_buffer;
+    direction_t new_dir;
+    int player_num = *(int *) player_fd;
+
+    snake_t *snake = add_player(game, player_num);
+
+    // Send map to client (player)
+    char map_buffer[MAP_SIZE];
+    memcpy(map_buffer, game->map, MAP_SIZE);
+    send_one(map_buffer, player_num);
+
+    while (true)
+    {
+        memset(key_buffer, 0, 1);
+
+        if (read(player_fd, key_buffer, 255) < 0)
+        {
+            remove_player(game, snake);
+            close(player_fd);
+            print_error("ERROR reading from socket");
+            break;
+        }
+
+        new_dir = toupper(key_buffer);
+        
+        if (is_direction_valid(snake->head.direction, new_dir))
+            change_snake_direction(snake, new_dir);
+    }
 }
 
 void make_detached_thread(void* (*fn)(void *), void* arg)

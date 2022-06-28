@@ -9,8 +9,9 @@
 
 #define PORT            5566
 
-#define GAME_HEIGHT     24    // default size of terminal window in num of chars
-#define GAME_WIDTH      80
+#define MAP_HEIGHT      24    // default size of terminal window in num of chars
+#define MAP_WIDTH       80
+#define MAP_SIZE        (MAP_HEIGHT*MAP_WIDTH)
 
 #define UP_KEY          'W'
 #define LEFT_KEY        'A'
