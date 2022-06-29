@@ -21,17 +21,30 @@ typedef struct game
     size_t snakes_size;
 } game_t;
 
+typedef enum player_status
+{
+    PLAYING,
+    WINNER,
+    DEAD
+} player_status_t;
+
 game_t *create_game(void);
 
 void remove_player(game_t *game, snake_t *snake);
 
 snake_t *add_player(game_t *game, int player_num);
 
+player_status_t move_player(game_t *game, snake_t *snake);
+
 void add_fruit(game_t *game);
 
 void update_map_coordinate(game_t *game, coordinate_t const *coord, int value);
 
 int value_at_coordindate(game_t const *game, coordinate_t const *coord);
+
+bool is_collided(game_t *game, coordinate_t *snake_head);
+
+bool is_outside_border(coordinate_t *coord);
 
 bool is_coord_valid(game_t const *game, coordinate_t const *coord, int type);
 

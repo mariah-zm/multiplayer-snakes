@@ -9,15 +9,16 @@ int main(void)
 
     // Create game
     game_t *game = create_game();
+    game_server_data_t game_server;
+    game_server.game = game;
 
     // Initialise server
-    init_game_server(game);
+    init_game_server(&game_server);
 
-    // Accept incoming connections
-    accept_clients();
+    start_game(&game_server);
 
     // Close server socket on termination
-    close_game_server();  
+    close_game_server(&game_server);  
     
     return 0; 
 }

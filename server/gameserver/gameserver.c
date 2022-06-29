@@ -1,65 +1,135 @@
 #include "gameserver.h"
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
 #include <pthread.h>
+#include <time.h>
 
-int server_socket_fd;
-int client_socket_fds[MAX_PLAYERS];     
-struct sockaddr_in server_addr;
-struct sockaddr_in client_addrs[MAX_PLAYERS];
-
-game_t *game;
-
-void init_game_server(game_t *game_p)
+void init_game_server(game_server_data_t *server_data)
 {
-    game = game_p;
     // Create server socket
-    if ((server_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    if ((server_data->server_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         exit_error("ERR: could not open server socket");
 
     // Initialize socket structure
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(PORT);
+    memset(&server_data->server_addr, 0, sizeof(server_data->server_addr));
+    server_data->server_addr.sin_family = AF_INET;
+    server_data->server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_data->server_addr.sin_port = htons(PORT);
 
     // Bind the host address
-    if (bind(server_socket_fd, (struct sockaddr *) &server_socket_fd, 
-                sizeof(server_socket_fd)) < 0) 
+    if (bind(server_data->server_socket_fd, 
+                (struct sockaddr *) &server_data->server_socket_fd, 
+                sizeof(server_data->server_socket_fd)) < 0) 
     {
-		close(server_socket_fd);
+		close(server_data->server_socket_fd);
         exit_error("ERR: could not bind server socket");
 	}
 
     // Start listening for clients
-    listen(server_socket_fd, 5);
+    listen(server_data->server_socket_fd, 5);
 }
 
-void close_game_server(void)
+void close_game_server(game_server_data_t *server_data)
 {
-    close(server_socket_fd);
+    close(server_data->server_socket_fd);
 }
 
-void accept_clients(void)
+void start_game(game_server_data_t *server_data)
+{
+    game_t *game = server_data->game;
+
+    // Start thread to add fruit at random intervals
+    make_detached_thread(&fruit_thread_fn, game);
+    // Start thread to move snakes every 1s
+    make_detached_thread(&move_thread_fn, game);
+
+    while (true)
+    {
+        // Accept new clients while game is running
+        while (game->is_running)
+        {
+            accept_clients(server_data);
+        }
+
+        // If game stops running it means someone has won and game needs to be 
+        // reset
+        reset_game(game);
+
+        // TODO re add snakes for all connected clients
+
+        // TODO send winner
+
+        // Resend new copy of map to all connected clients
+        send_all(server_data);
+    }
+}
+
+void *fruit_thread_fn(void *arg)
+{
+    game_t *game = (game_t *) arg;
+
+    while (game->is_running)
+    {
+        add_fruit(game);
+
+        // Creating random intervals between 0 and 2 seconds
+        int milli_seconds = rand() % 2000;
+        struct timespec ts;
+        ts.tv_sec = 0;
+        ts.tv_nsec = milli_seconds * 1000000;
+        nanosleep(&ts, NULL);
+    }
+}
+
+void *move_thread_fn(void *arg)
+{
+    game_server_data_t *server_data = (game_server_data_t *) arg;
+    game_t *game = server_data->game;
+
+    while (game->is_running)
+    {
+        for (size_t i = 0; i < game->snakes_size; ++i)
+        {    
+            snake_t *snake = game->snakes[i];
+            if (snake != NULL)
+            {
+                player_status_t status = move_player(game, snake);
+
+                if (status == WINNER)
+                    game->is_running = false;
+                else if (status == DEAD)
+                    remove_player(game, snake);
+            }
+        }
+        
+        // Send updated map to each client after all of them move
+        send_all(server_data);
+        struct timespec ts;
+        ts.tv_sec = 0;
+        ts.tv_nsec = 800000000; // every 0.8s, snakes move
+        nanosleep(&ts, NULL);
+    }
+}
+
+void accept_clients(game_server_data_t *server_data)
 { 
     size_t client_num = 0;
     socklen_t client_len = sizeof(struct sockaddr_in);
 
-    while (game->is_running)
+    while (server_data->game->is_running)
     {
         // Accept incoming connection
-        client_socket_fds[client_num] = accept(server_socket_fd, 
-                (struct sockaddr *) &client_socket_fds[client_num], &client_len);
+        server_data->client_socket_fds[client_num] 
+            = accept(server_data->server_socket_fd, 
+                (struct sockaddr *) &server_data->client_socket_fds[client_num], 
+                &client_len);
         
-        if (client_socket_fds[client_num] < 0) 
+        if (server_data->client_socket_fds[client_num] < 0) 
             print_error("ERR: could not accept connection request");
         else 
         {
             // Handle game loop for player in separate thread
             make_detached_thread(&handle_client_connection, 
-                                    &client_socket_fds[client_num]); 
+                                    &server_data->client_socket_fds[client_num]); 
 
             ++client_num;
         }
@@ -78,45 +148,51 @@ void send_one(char *map_buffer, int client_fd)
     } 
 }
 
-void send_all()
+void send_all(game_server_data_t *server_data)
 {
     char map_buffer[MAP_SIZE];
-    memcpy(map_buffer, game->map, MAP_SIZE);
+    memcpy(map_buffer, server_data->game->map, MAP_SIZE);
 
-    for (int i = 0; i < game->snakes_size; ++i)
+    for (int i = 0; i < server_data->game->snakes_size; ++i)
     {
-        if (game->snakes[i] != NULL)
-            send_one(map_buffer, client_socket_fds[i]);
+        if (server_data->game->snakes[i] != NULL)
+            send_one(map_buffer, server_data->client_socket_fds[i]);
     }
 }
 
-void *handle_client_connection(void *player_fd)
+void *handle_client_connection(void *arg)
 {
+    // TODO read disconnect request
     char key_buffer;
     direction_t new_dir;
-    int player_num = *(int *) player_fd;
 
-    snake_t *snake = add_player(game, player_num);
+    client_conn_data_t conn_data = *(client_conn_data_t *) arg;
+    int client_fd = conn_data.client_socket_fd;
+    game_t *game = conn_data.game;
+
+    snake_t *snake = add_player(game, client_fd);
 
     // Send map to client (player)
     char map_buffer[MAP_SIZE];
     memcpy(map_buffer, game->map, MAP_SIZE);
-    send_one(map_buffer, player_num);
+    send_one(map_buffer, client_fd);
 
     while (true)
     {
         memset(key_buffer, 0, 1);
 
-        if (read(player_fd, key_buffer, 255) < 0)
+        // Reading key from client
+        if (read(client_fd, key_buffer, 1) < 0)
         {
             remove_player(game, snake);
-            close(player_fd);
+            close(client_fd);
             print_error("ERROR reading from socket");
             break;
         }
 
         new_dir = toupper(key_buffer);
         
+        // Changing direction if entered key is valid
         if (is_direction_valid(snake->head.direction, new_dir))
             change_snake_direction(snake, new_dir);
     }

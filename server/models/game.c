@@ -64,6 +64,32 @@ snake_t *add_player(game_t *game, int player_num)
     return snake;
 }
 
+player_status_t move_player(game_t *game, snake_t *snake)
+{
+    coordinate_t old_tail = snake->tail;
+
+    move_snake(snake);
+
+    if (is_collided(game, &snake->head))
+    {
+        remove_player(game, snake);
+        return DEAD;
+    }
+    else if (value_at_coordindate(game, &snake->head) == FRUIT)
+        feed_snake(snake);
+    else
+        // Updating value of old tail if it hasn't eaten, rest of body is same
+        update_map_coordinate(game, &old_tail, EMPTY);
+
+    // Updating value at new head in any case because always moves forward
+    update_map_coordinate(game, &snake->head, snake->player_num);
+
+    if (snake->length == 15)
+        return WINNER;
+
+    return PLAYING;    
+}
+
 void add_fruit(game_t *game)
 {
     coordinate_t coordinate = get_random_coordinate();
@@ -84,6 +110,24 @@ void update_map_coordinate(game_t *game, coordinate_t const *coord, int value)
 int value_at_coordindate(game_t const *game, coordinate_t const *coord)
 {
     return game->map[coord->y][coord->x];
+}
+
+bool is_collided(game_t *game, coordinate_t *snake_head)
+{
+    if (is_outside_border(&snake_head))
+        return true;
+    else 
+    {
+        int value_at_head = value_at_coordindate(game, snake_head);
+        return value_at_head != FRUIT && value_at_head != EMPTY;
+    }
+        
+}
+
+bool is_outside_border(coordinate_t *coord)
+{
+    return coord->x < 0 || coord->x >= MAP_WIDTH 
+            || coord->y < 0 || coord->y >= MAP_HEIGHT;
 }
 
 bool is_coord_valid(game_t const *game, coordinate_t const *coord, int type)
