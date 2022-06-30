@@ -14,7 +14,7 @@
 typedef struct game 
 {
     pthread_mutex_t lock;
-    size_t map[MAP_HEIGHT][MAP_WIDTH];
+    game_map_t map;
     size_t num_players;
     bool is_running;
     snake_t *snakes[MAX_PLAYERS];

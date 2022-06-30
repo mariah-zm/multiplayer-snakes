@@ -75,7 +75,7 @@ void *fruit_thread_fn(void *arg)
         int milli_seconds = rand() % 2000;
         struct timespec ts;
         ts.tv_sec = 0;
-        ts.tv_nsec = milli_seconds * 1000000;
+        ts.tv_nsec = milli_seconds * 1000000L;
         nanosleep(&ts, NULL);
     }
 }
@@ -105,7 +105,7 @@ void *move_thread_fn(void *arg)
         send_all(server_data);
         struct timespec ts;
         ts.tv_sec = 0;
-        ts.tv_nsec = 800000000; // every 0.8s, snakes move
+        ts.tv_nsec = 800000000L; // every 0.8s, snakes move
         nanosleep(&ts, NULL);
     }
 }

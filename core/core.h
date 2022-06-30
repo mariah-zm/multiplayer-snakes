@@ -1,8 +1,7 @@
 /**
- * @file core.h
+ * @file   core.h
  * @author Mariah Zammit
- * @brief For data shared between server and client
- * 
+ * @brief  For data, types and functions shared between server and client
  */
 #ifndef INCLUDED_CORE_
 #define INCLUDED_CORE_
@@ -17,6 +16,8 @@
 #define LEFT_KEY        'A'
 #define DOWN_KEY        'S'
 #define RIGHT_KEY       'D'
+
+typedef int game_map_t[MAP_HEIGHT][MAP_WIDTH];
 
 void print_error(char *msg);
 
