@@ -1,2 +1,13 @@
 # VSCODE
 .vscode
+
+#CMake
+*/Makefile
+*/CMakeFiles
+*/*.cmake
+*/CMakeCache.txt
+
+#Executables
+client/snakes-client
+server/snakes-server
+

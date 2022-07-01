@@ -10,16 +10,27 @@ int main(int argc, char *argv[])
         exit_error(msg);
     }
 
-    WINDOW *window = create_window();
-    show_welcome_screen(window);
+    init_ncurses();
+    WINDOW *game_window = create_game_window();
+
+    // Display menu
+    while (true)
+    {
+        size_t option = show_menu(game_window);
+
+        if (option == 1 || option == 3)
+            break;
+        else 
+            show_instructions(game_window);
+    }
 
     client_data_t client_data;
-    open_client_connection(&client_data, argv[1]);
+    // open_client_connection(&client_data, argv[1]);
 
     // Start gameplay
 
-    close_client_connection(&client_data);
-    destroy_window(window);
+    // close_client_connection(&client_data);
+    destroy_window(game_window);
 
     return 0;
 }

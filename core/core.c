@@ -1,6 +1,7 @@
 #include "core.h"
 
-#include "stdio.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 void print_error(char *msg)
 {

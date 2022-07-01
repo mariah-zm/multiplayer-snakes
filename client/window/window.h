@@ -2,12 +2,17 @@
 #define INCLUDED_WINDOW
 
 #include <ncurses.h>
+// #include <curses.h>
 
-#include "../core/core.h"
+#include "../../core/core.h"
 
-WINDOW *create_window();
+void init_ncurses();
 
-void show_welcome_screen(WINDOW *window);
+WINDOW *create_game_window();
+
+size_t show_menu(WINDOW *window);
+
+void show_instructions(WINDOW *window);
 
 void show_winner(WINDOW *window, int player_num);
 
