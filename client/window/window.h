@@ -2,24 +2,40 @@
 #define INCLUDED_WINDOW
 
 #include <ncurses.h>
-// #include <curses.h>
 
 #include "../../core/core.h"
+
+#define WIN_HEIGHT  (MAP_HEIGHT + 1)
+#define WIN_WIDTH   (MAP_WIDTH)
+
+// Values of Keys
+#define ENTER       10
+#define UP_ARROW    'A'      
+#define DOWN_ARROW  'B'
+#define BACKSPACE   8
+#define DELETE      127
+#define QUIT        'Q'
+
+// Colour indices
+#define MAIN_COL    8
+#define TITLE_COL   9
+#define OPTIONS_COL 10
+#define SCORE_COL   11
 
 void init_ncurses();
 
 WINDOW *create_game_window();
 
+void destroy_game_window(WINDOW *window);
+
 size_t show_menu(WINDOW *window);
 
 void show_instructions(WINDOW *window);
 
+void show_game(WINDOW *window, game_data_t *data);
+
 void show_winner(WINDOW *window, int player_num);
 
 void show_losing_screen(WINDOW *window);
-
-void update_window(WINDOW *window, game_map_t *map);
-
-void destroy_window(WINDOW *window);
 
 #endif

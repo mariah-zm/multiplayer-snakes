@@ -7,9 +7,7 @@
 #include "../servercore/servercore.h"
 #include "snake.h"
 
-#define EMPTY           0
-#define FRUIT           100 
-#define MAX_PLAYERS     1000
+#define MAX_PLAYERS     7
 
 typedef struct game 
 {

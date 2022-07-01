@@ -2,24 +2,13 @@
 
 #include <ctype.h>
 
-#define ENTER       10
-#define UP_ARROW    'A'      
-#define DOWN_ARROW  'B'
-#define BACKSPACE   8
-#define DELETE      127
-#define QUIT        'Q'
-
-#define MAIN_COL    1
-#define TITLE_COL   2
-#define OPTIONS_COL 3
-
 // Private constants for centering vertically on screen
 size_t const WELCOME_HEIGTH = 20;
-size_t const MID_Y = (MAP_HEIGHT-WELCOME_HEIGTH)/2;
+size_t const MID_Y = (WIN_HEIGHT-WELCOME_HEIGTH)/2;
 
 // Private constants for centering menu options horizontally on screen
 size_t const MENU_WIDTH = 13;
-size_t const MENU_MID_X = (MAP_WIDTH-MENU_WIDTH)/2;
+size_t const MENU_MID_X = (WIN_WIDTH-MENU_WIDTH)/2;
 
 
 void print_title(WINDOW *window);
@@ -42,16 +31,32 @@ void init_ncurses()
     init_pair(MAIN_COL, COLOR_WHITE, COLOR_BLACK);
     init_pair(TITLE_COL, COLOR_GREEN, COLOR_BLACK);
     init_pair(OPTIONS_COL, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(SCORE_COL, COLOR_WHITE, COLOR_MAGENTA);
+
+    // Snake Colours
+    init_pair(1, COLOR_BLACK, COLOR_GREEN);
+    init_pair(2, COLOR_BLACK, COLOR_BLUE);
+    init_pair(3, COLOR_BLACK, COLOR_YELLOW);
+    init_pair(4, COLOR_BLACK, COLOR_RED);
+    init_pair(5, COLOR_BLACK, COLOR_MAGENTA);
+    init_pair(6, COLOR_BLACK, COLOR_CYAN);
+    init_pair(7, COLOR_BLACK, COLOR_WHITE);
 }
 
 WINDOW *create_game_window()
 {
-    WINDOW *game_window = newwin(MAP_HEIGHT, MAP_WIDTH, 0, 0);
+    WINDOW *game_window = newwin(WIN_HEIGHT, WIN_WIDTH, 0, 0);
     box(game_window, 0 , 0);
     wbkgd(game_window, COLOR_PAIR(MAIN_COL));
     wrefresh(game_window);
 
     return game_window;
+}
+
+void destroy_game_window(WINDOW *window)
+{
+    delwin(window);
+    endwin();
 }
 
 size_t show_menu(WINDOW *window)
@@ -102,6 +107,41 @@ void show_instructions(WINDOW *window)
     } while (!exit_menu);
 }
 
+void show_game(WINDOW *window, game_data_t *data)
+{
+    werase(window);
+    char *msg = "";
+    game_map_t *map = &data->map;
+
+    wattron(window, COLOR_PAIR(SCORE_COL));
+    mvwprintw(window, 0, 0, "Score: %d %70s ", data->score, msg);
+    wattroff(window, COLOR_PAIR(SCORE_COL));
+
+    for (size_t y = 1; y < MAP_HEIGHT; ++y)
+    {
+        for (size_t x = 0; x < MAP_WIDTH; ++x)
+        {
+            if (*map[y][x] == FRUIT)
+                mvwprintw(window, y, x, "o");
+            else if (*map[y][x] != EMPTY)
+            {
+                wattron(window, COLOR_PAIR(data->player_num));
+
+                // Checking if snake head
+                if (*map[y][x] < 0)
+                    mvwprintw(window, y, x, ".");
+                else 
+                    mvwprintw(window, y, x, " "); 
+
+                wattroff(window, COLOR_PAIR(data->player_num));
+            }
+        }
+    }
+
+    wrefresh(window);
+}
+
+
 void show_winner(WINDOW *window, int player_num)
 {
 
@@ -112,22 +152,11 @@ void show_losing_screen(WINDOW *window)
 
 }
 
-void update_window(WINDOW *window, game_map_t *map)
-{
-
-}
-
-void destroy_window(WINDOW *window)
-{
-    delwin(window);
-    endwin();
-}
-
 void print_title(WINDOW *window)
 {
-    // Constants for centering horizontally on screen
+    // Constants for centering horizontally
     size_t const TITLE_WIDTH = 35;
-    size_t const TITLE_MID_X = (MAP_WIDTH-TITLE_WIDTH)/2;
+    size_t const TITLE_MID_X = (WIN_WIDTH-TITLE_WIDTH)/2;
 
     wattron(window, COLOR_PAIR(TITLE_COL)); 
     mvwprintw(window, MID_Y, TITLE_MID_X, 
@@ -145,10 +174,11 @@ void print_title(WINDOW *window)
 
 void print_menu(WINDOW *window, size_t option)
 {
+    // Constants for centering horizontally
     size_t const MENU_INS1_WIDTH = 49;   
-    size_t const MENU_INS1_MID_X = (MAP_WIDTH-MENU_INS1_WIDTH)/2;
+    size_t const MENU_INS1_MID_X = (WIN_WIDTH-MENU_INS1_WIDTH)/2;
     size_t const MENU_INS2_WIDTH = 28;   
-    size_t const MENU_INS2_MID_X = (MAP_WIDTH-MENU_INS2_WIDTH)/2;
+    size_t const MENU_INS2_MID_X = (WIN_WIDTH-MENU_INS2_WIDTH)/2;
 
     werase(window);
     print_title(window);
@@ -173,9 +203,9 @@ void print_instructions(WINDOW *window)
 {
     // Constants for centering horizontally on screen
     size_t const INSTRUCTIONS_WIDTH = 58;
-    size_t const INS_MID_X = (MAP_WIDTH-INSTRUCTIONS_WIDTH)/2;
+    size_t const INS_MID_X = (WIN_WIDTH-INSTRUCTIONS_WIDTH)/2;
     size_t const INS_INS_WIDTH = 26;
-    size_t const INS_INS_MID_X = (MAP_WIDTH-INS_INS_WIDTH)/2;
+    size_t const INS_INS_MID_X = (WIN_WIDTH-INS_INS_WIDTH)/2;
 
     werase(window);
     print_title(window);

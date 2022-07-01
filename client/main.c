@@ -24,13 +24,16 @@ int main(int argc, char *argv[])
             show_instructions(game_window);
     }
 
+    game_data_t game_data;
+    show_game(game_window, &game_data);
+    
     client_data_t client_data;
-    // open_client_connection(&client_data, argv[1]);
+    open_client_connection(&client_data, argv[1]);
 
     // Start gameplay
 
-    // close_client_connection(&client_data);
-    destroy_window(game_window);
+    close_client_connection(&client_data);
+    destroy_game_window(game_window);
 
     return 0;
 }
