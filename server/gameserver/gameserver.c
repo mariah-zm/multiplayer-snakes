@@ -3,6 +3,18 @@
 #include <pthread.h>
 #include <time.h>
 
+// PRIVATE FUNCTIONS NOT INCLUDED IN THE API
+void *fruit_thread_fn(void *arg);
+void *move_thread_fn(void *arg);
+void accept_clients(game_server_data_t *server_data);
+bool send_one(network_data_t *data, int client_fd);
+void send_all(game_server_data_t *server_data);
+void *handle_client_connection(void *player_fd);
+void make_detached_thread(void* (*fn)(void *), void* arg);
+bool send_to_client(char *buffer, size_t buffer_size, int client_fd);
+bool send_value(int32_t value, int client_fd);
+bool send_map(game_map_t *map, int client_fd);
+
 void init_game_server(game_server_data_t *server_data)
 {
     // Create server socket
@@ -50,8 +62,13 @@ void start_game(game_server_data_t *server_data)
             accept_clients(server_data);
         }
 
-        // If game stops running it means someone has won and game needs to be 
-        // reset
+        // If game stops running it means someone has wonunion data 
+    {
+        
+    }
+        // TODO send winner
+
+        // Game needs to be reset
         reset_game(game);
 
         // TODO re add snakes for all connected clients
@@ -136,16 +153,60 @@ void accept_clients(game_server_data_t *server_data)
     }
 }
 
-void send_one(char *map_buffer, int client_fd)
+bool send_to_client(char *buffer, size_t buffer_size, int client_fd)
 {
     size_t bytes_sent = 0;
 
-    while(bytes_sent < MAP_SIZE)
-    {         
-        bytes_sent += write(client_fd, map_buffer, MAP_SIZE);
-        if (bytes_sent < 0) 
-            print_error("ERR: failed to write to client socket");
-    } 
+    while (bytes_sent < buffer_size)
+    {
+        bytes_sent += write(client_fd, buffer, buffer_size);
+
+        if (bytes_sent < 0)
+            return false;
+    }
+
+    return true;
+}
+
+bool send_map(game_map_t *map, int client_fd)
+{    
+    size_t const SIZE = MAP_SIZE * sizeof(map[0][0]);
+    char map_buffer[SIZE];
+    memcpy(map_buffer, map, SIZE);
+
+    return send_to_client(map_buffer, SIZE, client_fd);
+}
+
+bool send_value(int32_t value, int client_fd)
+{
+    size_t const SIZE = sizeof(value);
+    char buffer[SIZE];
+    memset(buffer, 0, SIZE);
+    memcpy(buffer, value, SIZE);
+
+    return send_to_client(buffer, SIZE, client_fd);
+}
+
+bool send_one(network_data_t *data, int client_fd)
+{
+    // Sending type of data being sent first
+    if (!send_value(data->type, client_fd))
+        return false;
+
+    switch (data->type)
+    {
+        case MAP_DATA:
+            return send_map(data->data.map, client_fd);
+        case PLAYER_NUM:
+            return send_value(data->data.player_num, client_fd);
+        case SCORE_DATA:
+            return send_value(data->data.score, client_fd);
+        case ENDGAME_DATA:
+            return send_value(data->data.is_winner, client_fd);
+        case MSG_DATA:
+            return send_to_client(data->data.msg, MSG_SIZE, client_fd);
+        default: return false;  // Required for no warnings
+    }
 }
 
 void send_all(game_server_data_t *server_data)
@@ -162,7 +223,6 @@ void send_all(game_server_data_t *server_data)
 
 void *handle_client_connection(void *arg)
 {
-    // TODO read disconnect request
     char key_buffer;
     direction_t new_dir;
 
@@ -192,8 +252,15 @@ void *handle_client_connection(void *arg)
 
         new_dir = toupper(key_buffer);
         
+        // Disconnect player
+        if (new_dir == 'Q')
+        {
+            remove_player(game, snake);
+            close(client_fd);
+            break;
+        }
         // Changing direction if entered key is valid
-        if (is_direction_valid(snake->head.direction, new_dir))
+        else if (is_direction_valid(snake->head.direction, new_dir))
             change_snake_direction(snake, new_dir);
     }
 }

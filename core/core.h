@@ -21,16 +21,32 @@
 #define EMPTY           0
 #define FRUIT           100 
 
+#define MAP_DATA        0
+#define PLAYER_NUM      1
+#define SCORE_DATA      2
+#define ENDGAME_DATA    3
+#define MSG_DATA        4
+
+#define MSG_SIZE        25
+
 #include <stddef.h>
 
-typedef int game_map_t[MAP_HEIGHT][MAP_WIDTH];
+typedef int32_t game_map_t[MAP_HEIGHT][MAP_WIDTH];
 
-typedef struct game_data
+typedef union data 
 {
-    game_map_t map;
-    size_t player_num;
-    size_t score;
-} game_data_t;
+    game_map_t *map;
+    int32_t player_num;
+    int32_t score; 
+    int32_t is_winner;
+    char msg[MSG_SIZE];
+} data_t;
+
+typedef struct network_data
+{
+    int32_t type;
+    data_t data;
+} network_data_t;
 
 void print_error(char *msg);
 

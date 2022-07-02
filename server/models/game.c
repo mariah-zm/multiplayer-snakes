@@ -81,8 +81,9 @@ player_status_t move_player(game_t *game, snake_t *snake)
         // Updating value of old tail if it hasn't eaten, rest of body is same
         update_map_coordinate(game, &old_tail, EMPTY);
 
-    // Updating value at new head in any case because always moves forward
-    update_map_coordinate(game, &snake->head, snake->player_num);
+    // Updating value at new and old head in any case because always moves forward
+    update_map_coordinate(game, &snake->head, -snake->player_num);
+    update_map_coordinate(game, &snake->body[0], snake->player_num);
 
     if (snake->length == 15)
         return WINNER;

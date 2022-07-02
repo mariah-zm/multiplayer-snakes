@@ -28,18 +28,4 @@ void close_game_server(game_server_data_t *server_data);
 
 void start_game(game_server_data_t *server_data);
 
-void *fruit_thread_fn(void *arg);
-
-void *move_thread_fn(void *arg);
-
-void accept_clients(game_server_data_t *server_data);
-
-void send_one(char *map_buffer, int client_fd);
-
-void send_all(game_server_data_t *server_data);
-
-void *handle_client_connection(void *player_fd);
-
-void make_detached_thread(void* (*fn)(void *), void* arg);
-
 #endif

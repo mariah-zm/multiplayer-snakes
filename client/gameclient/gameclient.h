@@ -19,7 +19,7 @@ void open_client_connection(client_data_t *client_data, char *hostname);
 
 void close_client_connection(client_data_t *client_data);
 
-void handle_connection(client_data_t *client_data);
+void *handle_connection(void *arg);
 
 void write_to_server(client_data_t *client_data, char key);
 
