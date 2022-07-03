@@ -10,6 +10,7 @@ typedef struct snake
     coordinate_t head;
     coordinate_t tail;
     coordinate_t body[MAX_SNAKE_LEN-2];
+    player_status_t status;
 } snake_t;
 
 snake_t *create_snake(int player_num, coordinate_t const *head);

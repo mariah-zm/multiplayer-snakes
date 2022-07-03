@@ -19,13 +19,20 @@ typedef struct game_server
 typedef struct client_conn_data
 {
     game_t *game;
+    int32_t player_num;
     int client_socket_fd;
 } client_conn_data_t;
+
+typedef struct data_to_send
+{
+    network_data_t data;
+    int client_socket_fd;
+} data_to_send_t;
 
 void init_game_server(game_server_data_t *server_data);
 
 void close_game_server(game_server_data_t *server_data);
 
-void start_game(game_server_data_t *server_data);
+void start_game_server(game_server_data_t *server_data);
 
 #endif

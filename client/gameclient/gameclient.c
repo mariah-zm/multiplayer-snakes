@@ -2,7 +2,7 @@
 
 void open_client_connection(client_data_t *client_data, char *hostname)
 {
-    
+
 }
 
 void close_client_connection(client_data_t *client_data)
@@ -15,7 +15,10 @@ void *handle_connection(void *arg)
 
 }
 
-void write_to_server(client_data_t *client_data, char key);
+void write_to_server(client_data_t *client_data, char key)
+{
+
+}
 
 void receive_from_server(client_data_t *client_data, game_map_t *map)
 {
@@ -34,7 +37,7 @@ void receive_from_server(client_data_t *client_data, game_map_t *map)
     {
         case MAP_DATA:
             break;
-        case PLAYER_NUM:
+        case P_NUM_DATA:
             break;
         case SCORE_DATA:
             break;

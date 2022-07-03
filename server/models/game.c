@@ -40,19 +40,19 @@ void remove_player(game_t *game, snake_t *snake)
     pthread_mutex_unlock(&game->lock);
 }
 
-snake_t *add_player(game_t *game, int player_num)
+snake_t *add_player(game_t *game, int player_fd)
 {
     // Getting position of snake's head
     coordinate_t head = get_random_coordinate();
 
-    while (is_coord_valid(game, &head, player_num))
+    while (!is_coord_valid(game, &head, player_fd))
         head = get_random_coordinate();
 
     // Creating snake
-    snake_t *snake = create_snake(player_num, &head);
+    snake_t *snake = create_snake(player_fd, &head);
 
     // Placing snake on map
-    update_map_coordinate(game, &snake->head, snake->player_num);
+    update_map_coordinate(game, &snake->head, -snake->player_num);
     update_map_coordinate(game, &snake->tail, snake->player_num);
 
     pthread_mutex_lock(&game->lock);
@@ -64,7 +64,7 @@ snake_t *add_player(game_t *game, int player_num)
     return snake;
 }
 
-player_status_t move_player(game_t *game, snake_t *snake)
+void move_player(game_t *game, snake_t *snake)
 {
     coordinate_t old_tail = snake->tail;
 
@@ -73,7 +73,8 @@ player_status_t move_player(game_t *game, snake_t *snake)
     if (is_collided(game, &snake->head))
     {
         remove_player(game, snake);
-        return DEAD;
+        snake->status = DEAD;
+        return;
     }
     else if (value_at_coordindate(game, &snake->head) == FRUIT)
         feed_snake(snake);
@@ -86,9 +87,7 @@ player_status_t move_player(game_t *game, snake_t *snake)
     update_map_coordinate(game, &snake->body[0], snake->player_num);
 
     if (snake->length == 15)
-        return WINNER;
-
-    return PLAYING;    
+        snake->status = WINNER;    
 }
 
 void add_fruit(game_t *game)
@@ -139,8 +138,9 @@ bool is_coord_valid(game_t const *game, coordinate_t const *coord, int type)
         return false;
     // Otherwise it's empty so good
     else 
-        // fruit/players must be away from other fruit/players
-        return is_isolated(game, coord); 
+        // fruit/players must be away from other fruit/players and from border
+        return !is_coord_at_border(game, coord, type) 
+            && is_isolated(game, coord); 
 
     return true;
 }
@@ -178,6 +178,24 @@ bool is_isolated(game_t const *game, coordinate_t const *coord)
     }
 
     return true;
+}
+
+bool is_coord_at_border(game_t const *game, coordinate_t const *coord, int type)
+{
+    // FRUIT cannot be at border
+    if (type == FRUIT)
+    {
+        return coord->x == 0 || coord->x == MAP_WIDTH-1 
+            || coord->y == 0 || coord->y == MAP_HEIGHT-1;
+    }
+    // Snake head cannot be facing border
+    else 
+    {
+        return (coord->direction == UP && coord->y == 0)
+                || (coord->direction == DOWN && coord->y == MAP_HEIGHT-1)
+                || (coord->direction == LEFT && coord->x == 0)
+                || (coord->direction == RIGHT && coord->x == MAP_WIDTH-1);
+    }
 }
 
 bool is_direction_valid(direction_t current_dir, direction_t next_dir)

@@ -22,6 +22,13 @@ typedef struct coordinate
     direction_t direction;
 } coordinate_t;
 
+typedef enum player_status
+{
+    PLAYING,
+    WINNER,
+    DEAD
+} player_status_t;
+
 direction_t get_random_direction(void);
 
 coordinate_t get_random_coordinate(void);

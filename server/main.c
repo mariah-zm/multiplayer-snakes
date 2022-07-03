@@ -15,7 +15,7 @@ int main(void)
     // Initialise server
     init_game_server(&game_server);
 
-    start_game(&game_server);
+    start_game_server(&game_server);
 
     // Close server socket on termination
     close_game_server(&game_server);  

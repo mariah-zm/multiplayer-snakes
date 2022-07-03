@@ -22,10 +22,11 @@
 #define FRUIT           100 
 
 #define MAP_DATA        0
-#define PLAYER_NUM      1
+#define P_NUM_DATA      1
 #define SCORE_DATA      2
 #define ENDGAME_DATA    3
-#define MSG_DATA        4
+#define DEAD_DATA       4
+#define MSG_DATA        5
 
 #define MSG_SIZE        25
 

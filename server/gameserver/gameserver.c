@@ -6,14 +6,14 @@
 // PRIVATE FUNCTIONS NOT INCLUDED IN THE API
 void *fruit_thread_fn(void *arg);
 void *move_thread_fn(void *arg);
-void accept_clients(game_server_data_t *server_data);
+void *accept_clients(void *arg);
 bool send_one(network_data_t *data, int client_fd);
-void send_all(game_server_data_t *server_data);
+void *send_map_to_all_clients(void *arg);
 void *handle_client_connection(void *player_fd);
 void make_detached_thread(void* (*fn)(void *), void* arg);
-bool send_to_client(char *buffer, size_t buffer_size, int client_fd);
-bool send_value(int32_t value, int client_fd);
-bool send_map(game_map_t *map, int client_fd);
+bool send_buffer_to_client(char *buffer, size_t buffer_size, int client_fd);
+bool send_value_to_client(int32_t value, int client_fd);
+bool send_map_to_client(game_map_t *map, int client_fd);
 
 void init_game_server(game_server_data_t *server_data)
 {
@@ -43,40 +43,66 @@ void init_game_server(game_server_data_t *server_data)
 void close_game_server(game_server_data_t *server_data)
 {
     close(server_data->server_socket_fd);
+    // TODO close client connections
 }
 
-void start_game(game_server_data_t *server_data)
+void start_game_server(game_server_data_t *server_data)
 {
     game_t *game = server_data->game;
 
-    // Start thread to add fruit at random intervals
-    make_detached_thread(&fruit_thread_fn, game);
-    // Start thread to move snakes every 1s
-    make_detached_thread(&move_thread_fn, game);
-
+    // Game server is always on
     while (true)
     {
-        // Accept new clients while game is running
-        while (game->is_running)
+        pthread_t fruitThread, moveThread, networkThread;
+        void *threadRet;
+
+        // Start thread to add fruit at random intervals
+        if (pthread_create(&fruitThread, NULL, fruit_thread_fn, game) != 0)
         {
-            accept_clients(server_data);
+            print_error("Failed to start fruit thread in game server.");
+            return;
         }
 
-        // If game stops running it means someone has wonunion data 
-    {
-        
-    }
-        // TODO send winner
+        // Start thread to move snakes every 0.8s
+        if (pthread_create(&moveThread, NULL, move_thread_fn, game) != 0)
+        {
+            print_error("Failed to start move thread in game server.");
 
-        // Game needs to be reset
-        reset_game(game);
+            if (pthread_join(fruitThread, &threadRet) != 0)
+                print_error("Failed to join fruit thread in game server.");
 
-        // TODO re add snakes for all connected clients
+            return;
+        }
 
-        // TODO send winner
+        // Start thread to accept incoming connections
+        if (pthread_create(&networkThread, NULL, accept_clients, server_data) != 0)
+        {
+            print_error("Failed to start network thread in game server.");
+            return;
+        }
 
-        // Resend new copy of map to all connected clients
-        send_all(server_data);
+        /* The threads will finish when game.is_running becomes false, i.e
+         * someone wins */
+
+        // Wait for fruit thread to finish
+        if (pthread_join(fruitThread, &threadRet) != 0)
+            print_error("Failed to join fruit thread in game server.");
+
+        // Wait for move thread to finish
+        if (pthread_join(moveThread, &threadRet) != 0)
+            print_error("Failed to join move thread in game server.");
+
+        // Wait for network thread to finish
+        if (pthread_join(networkThread, &threadRet) != 0)
+            print_error("Failed to join network thread in game server.");
+
+        // TODO send winner + game ended
+
+        // TODO reset game
+
+        // TODO readd all snakes for connected clients
+
+        // TODO send new map
     }
 }
 
@@ -84,6 +110,11 @@ void *fruit_thread_fn(void *arg)
 {
     game_t *game = (game_t *) arg;
 
+    while (game->num_players < 1)
+    {
+        // wait until players have joined 
+    }
+    
     while (game->is_running)
     {
         add_fruit(game);
@@ -102,6 +133,11 @@ void *move_thread_fn(void *arg)
     game_server_data_t *server_data = (game_server_data_t *) arg;
     game_t *game = server_data->game;
 
+    while (game->num_players < 1)
+    {
+        // wait until players have joined 
+    }
+
     while (game->is_running)
     {
         for (size_t i = 0; i < game->snakes_size; ++i)
@@ -109,17 +145,15 @@ void *move_thread_fn(void *arg)
             snake_t *snake = game->snakes[i];
             if (snake != NULL)
             {
-                player_status_t status = move_player(game, snake);
+                move_player(game, snake);
 
-                if (status == WINNER)
+                if (snake->status == WINNER)
                     game->is_running = false;
-                else if (status == DEAD)
-                    remove_player(game, snake);
             }
         }
         
         // Send updated map to each client after all of them move
-        send_all(server_data);
+        send_to_all_clients(server_data);
         struct timespec ts;
         ts.tv_sec = 0;
         ts.tv_nsec = 800000000L; // every 0.8s, snakes move
@@ -127,8 +161,9 @@ void *move_thread_fn(void *arg)
     }
 }
 
-void accept_clients(game_server_data_t *server_data)
+void *accept_clients(void *arg)
 { 
+    game_server_data_t *server_data = (game_server_data_t *) arg;
     size_t client_num = 0;
     socklen_t client_len = sizeof(struct sockaddr_in);
 
@@ -144,80 +179,23 @@ void accept_clients(game_server_data_t *server_data)
             print_error("ERR: could not accept connection request");
         else 
         {
-            // Handle game loop for player in separate thread
-            make_detached_thread(&handle_client_connection, 
-                                    &server_data->client_socket_fds[client_num]); 
+            if (client_num < MAX_PLAYERS)
+            {
+                client_conn_data_t *conn_data = malloc(sizeof(conn_data));
+                conn_data->client_socket_fd = server_data->client_socket_fds[client_num];
+                conn_data->player_num = client_num;
+                conn_data->game = server_data->game;
 
-            ++client_num;
+                // Handle game loop for player in separate detached thread
+                make_detached_thread(&handle_client_connection, conn_data); 
+
+                ++client_num;
+            }
+            else
+            {
+                // GAME IS FULL
+            }
         }
-    }
-}
-
-bool send_to_client(char *buffer, size_t buffer_size, int client_fd)
-{
-    size_t bytes_sent = 0;
-
-    while (bytes_sent < buffer_size)
-    {
-        bytes_sent += write(client_fd, buffer, buffer_size);
-
-        if (bytes_sent < 0)
-            return false;
-    }
-
-    return true;
-}
-
-bool send_map(game_map_t *map, int client_fd)
-{    
-    size_t const SIZE = MAP_SIZE * sizeof(map[0][0]);
-    char map_buffer[SIZE];
-    memcpy(map_buffer, map, SIZE);
-
-    return send_to_client(map_buffer, SIZE, client_fd);
-}
-
-bool send_value(int32_t value, int client_fd)
-{
-    size_t const SIZE = sizeof(value);
-    char buffer[SIZE];
-    memset(buffer, 0, SIZE);
-    memcpy(buffer, value, SIZE);
-
-    return send_to_client(buffer, SIZE, client_fd);
-}
-
-bool send_one(network_data_t *data, int client_fd)
-{
-    // Sending type of data being sent first
-    if (!send_value(data->type, client_fd))
-        return false;
-
-    switch (data->type)
-    {
-        case MAP_DATA:
-            return send_map(data->data.map, client_fd);
-        case PLAYER_NUM:
-            return send_value(data->data.player_num, client_fd);
-        case SCORE_DATA:
-            return send_value(data->data.score, client_fd);
-        case ENDGAME_DATA:
-            return send_value(data->data.is_winner, client_fd);
-        case MSG_DATA:
-            return send_to_client(data->data.msg, MSG_SIZE, client_fd);
-        default: return false;  // Required for no warnings
-    }
-}
-
-void send_all(game_server_data_t *server_data)
-{
-    char map_buffer[MAP_SIZE];
-    memcpy(map_buffer, server_data->game->map, MAP_SIZE);
-
-    for (int i = 0; i < server_data->game->snakes_size; ++i)
-    {
-        if (server_data->game->snakes[i] != NULL)
-            send_one(map_buffer, server_data->client_socket_fds[i]);
     }
 }
 
@@ -232,15 +210,18 @@ void *handle_client_connection(void *arg)
 
     snake_t *snake = add_player(game, client_fd);
 
-    // Send map to client (player)
-    char map_buffer[MAP_SIZE];
-    memcpy(map_buffer, game->map, MAP_SIZE);
-    send_one(map_buffer, client_fd);
+    // Send player num
+    network_data_t player_num_data;
+    player_num_data.type = P_NUM_DATA;
+    player_num_data.data.player_num = conn_data.player_num;
 
-    while (true)
+    // Send map to client
+    network_data_t map_data;
+    map_data.type = MAP_DATA;
+    map_data.data.map = game->map;
+
+    while (game->is_running && snake->status != DEAD)
     {
-        memset(key_buffer, 0, 1);
-
         // Reading key from client
         if (read(client_fd, key_buffer, 1) < 0)
         {
@@ -254,16 +235,95 @@ void *handle_client_connection(void *arg)
         
         // Disconnect player
         if (new_dir == 'Q')
-        {
-            remove_player(game, snake);
-            close(client_fd);
             break;
-        }
+
         // Changing direction if entered key is valid
         else if (is_direction_valid(snake->head.direction, new_dir))
             change_snake_direction(snake, new_dir);
     }
+
+    // Point reached if disconnected, dead, or game is won
+
+    if (snake->status == DEAD)
+    {
+        // Informing client that they died
+        network_data_t data;
+        data.type = DEAD_DATA;
+        send_to_client(&data, client_fd);
+
+        remove_player(game, snake);
+        close(client_fd);
+    }
+
+    // Clean up of network and player will be done in another function in case 
+    // the game has been won
+
+    // In any case, free allocated memory
+    free(conn_data);
 }
+
+bool send_to_client(network_data_t *data, int client_fd)
+{
+    // Sending type of data being sent first
+    if (!send_value(data->type, client_fd))
+        return false;
+
+    switch (data->type)
+    {
+        case MAP_DATA:
+            return send_map_to_client(data->data.map, client_fd);
+        case P_NUM_DATA:
+            return send_value_to_client(data->data.player_num, client_fd);
+        case SCORE_DATA:
+            return send_value_to_client(data->data.score, client_fd);
+        case ENDGAME_DATA:
+            return send_value_to_client(data->data.is_winner, client_fd);
+        case MSG_DATA:
+            return send_buffer_to_client(data->data.msg, MSG_SIZE, client_fd);
+        default: return false;  // Required for no warnings
+    }
+}
+
+bool send_buffer_to_client(char *buffer, size_t buffer_size, int client_fd)
+{
+    size_t bytes_sent = 0;
+
+    while (bytes_sent < buffer_size)
+    {
+        bytes_sent += write(client_fd, buffer, buffer_size);
+
+        if (bytes_sent < 0)
+            return false;
+    }
+
+    return true;
+}
+
+bool send_map_to_client(game_map_t *map, int client_fd)
+{
+    size_t const SIZE = MAP_SIZE * sizeof(map[0][0]);
+    char map_buffer[SIZE];
+    memcpy(map_buffer, map, SIZE);
+
+    return send_buffer_to_client(map_buffer, SIZE, client_fd);
+}
+
+bool send_value_to_client(int32_t value, int client_fd)
+{
+    size_t const SIZE = sizeof(value);
+    char buffer[SIZE];
+    memset(buffer, 0, SIZE);
+    memcpy(buffer, value, SIZE);
+
+    return send_buffer_to_client(buffer, SIZE, client_fd);
+}
+
+void *send_map_to_all_clients(void *arg)
+{
+
+}
+
+
 
 void make_detached_thread(void* (*fn)(void *), void* arg)
 {
