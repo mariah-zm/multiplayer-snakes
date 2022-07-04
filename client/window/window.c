@@ -107,8 +107,10 @@ void show_instructions(WINDOW *window)
     } while (!exit_menu);
 }
 
-void show_game(WINDOW *window, game_data_t *data)
+void show_game(game_data_t *data)
 {
+    // Pointer for fast access
+    WINDOW *window = data->window;
     werase(window);
     char *msg = "";
     game_map_t *map = &data->map;

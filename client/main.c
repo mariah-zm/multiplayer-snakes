@@ -1,3 +1,4 @@
+#include "clientcore/clientcore.h"
 #include "gameclient/gameclient.h"
 #include "window/window.h"
 
@@ -18,21 +19,21 @@ int main(int argc, char *argv[])
     {
         size_t option = show_menu(game_window);
 
-        if (option == 1 || option == 3)
-            break;
-        else 
+        if (option == OPT_PLAY)
+        {
+            client_data_t client_data;
+            open_client_connection(&client_data, argv[1]);
+
+            handle_client_connection(&client_data);
+
+            close_client_connection(&client_data);
+        }
+        else if (option == OPT_INS)
             show_instructions(game_window);
+        else        // option is EXIT
+            break;             
     }
-
-    game_data_t game_data;
-    show_game(game_window, &game_data);
     
-    client_data_t client_data;
-    open_client_connection(&client_data, argv[1]);
-
-    // Start gameplay
-
-    close_client_connection(&client_data);
     destroy_game_window(game_window);
 
     return 0;

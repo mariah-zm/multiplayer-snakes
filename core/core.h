@@ -53,4 +53,6 @@ void print_error(char *msg);
 
 void exit_error(char *msg);
 
+void make_detached_thread(void* (*fn)(void *), void* arg);
+
 #endif

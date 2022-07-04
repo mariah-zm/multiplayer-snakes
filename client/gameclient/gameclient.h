@@ -7,6 +7,7 @@
 #include <netdb.h>
 
 #include "../../core/core.h"
+#include "../window/window.h"
 
 typedef struct client_data
 {
@@ -19,10 +20,10 @@ void open_client_connection(client_data_t *client_data, char *hostname);
 
 void close_client_connection(client_data_t *client_data);
 
-void *handle_connection(void *arg);
+void handle_connection(client_data_t *client_data, WINDOW *window);
 
 void write_to_server(client_data_t *client_data, char key);
 
-void receive_from_server(client_data_t *client_data, game_map_t *map);
+network_data_t receive_from_server(client_data_t *client_data);
 
 #endif

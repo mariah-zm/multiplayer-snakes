@@ -4,6 +4,11 @@
 #include <ncurses.h>
 
 #include "../../core/core.h"
+#include "clientcore/clientcore.h"
+
+#define OPT_PLAY    1
+#define OPT_INS     2
+#define OPT_EXIT    3
 
 #define WIN_HEIGHT  (MAP_HEIGHT + 1)
 #define WIN_WIDTH   (MAP_WIDTH)
@@ -32,7 +37,7 @@ size_t show_menu(WINDOW *window);
 
 void show_instructions(WINDOW *window);
 
-void show_game(WINDOW *window, game_data_t *data);
+void show_game(game_data_t *data);
 
 void show_winner(WINDOW *window, int player_num);
 

@@ -10,7 +10,6 @@ void *accept_clients(void *arg);
 bool send_one(network_data_t *data, int client_fd);
 void *send_map_to_all_clients(void *arg);
 void *handle_client_connection(void *player_fd);
-void make_detached_thread(void* (*fn)(void *), void* arg);
 bool send_buffer_to_client(char *buffer, size_t buffer_size, int client_fd);
 bool send_value_to_client(int32_t value, int client_fd);
 bool send_map_to_client(game_map_t *map, int client_fd);
@@ -321,20 +320,4 @@ bool send_value_to_client(int32_t value, int client_fd)
 void *send_map_to_all_clients(void *arg)
 {
 
-}
-
-
-
-void make_detached_thread(void* (*fn)(void *), void* arg)
-{
-    pthread_t       tid;
-    pthread_attr_t  attr;
-
-    if (pthread_attr_init(&attr) != 0)
-        print_error("ERR: failed to initialise thread");
-
-    if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0)
-        pthread_create(&tid, &attr, fn, arg);
-    else
-        pthread_attr_destroy(&attr);
 }
