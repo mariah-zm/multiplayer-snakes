@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "../core/core.h"
+#include "../../core/core.h"
 
 #define MAX_SNAKE_LEN   15
 

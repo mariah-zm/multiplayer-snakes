@@ -1,5 +1,7 @@
 #include "snake.h"
 
+#include <stdlib.h>
+
 snake_t *create_snake(int player_num, coordinate_t const *head)
 {
     snake_t *snake = malloc(sizeof(snake_t));

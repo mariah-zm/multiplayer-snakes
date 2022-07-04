@@ -1,5 +1,7 @@
 #include "game.h"
 
+#include <stdlib.h>
+
 game_t *create_game(void)
 {
     // Locks are not rquired in this function as this new instance only exists
@@ -114,7 +116,7 @@ int value_at_coordindate(game_t const *game, coordinate_t const *coord)
 
 bool is_collided(game_t *game, coordinate_t *snake_head)
 {
-    if (is_outside_border(&snake_head))
+    if (is_outside_border(snake_head))
         return true;
     else 
     {

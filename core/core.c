@@ -3,10 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <string.h>
 
 void print_error(char *msg)
 {
-    perror(msg);
+    char new_msg[100] = "ERR: ";
+    strcat(new_msg, msg);
+    strcat(new_msg, "\n");
+    perror(new_msg);
 }
 
 void exit_error(char *msg)
@@ -22,7 +26,7 @@ void make_detached_thread(void* (*fn)(void *), void* arg)
     pthread_attr_t  attr;
 
     if (pthread_attr_init(&attr) != 0)
-        print_error("ERR: failed to initialise thread");
+        print_error("Failed to initialise thread");
 
     if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0)
         pthread_create(&tid, &attr, fn, arg);

@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+// #include <stdlib.h>
 
 typedef struct game_server
 {
@@ -19,7 +20,7 @@ typedef struct game_server
 typedef struct client_conn_data
 {
     game_t *game;
-    int32_t player_num;
+    size_t player_num;
     int client_socket_fd;
 } client_conn_data_t;
 

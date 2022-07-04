@@ -1,10 +1,12 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "gameserver/gameserver.h"
-#include "core/core.h"
+#include "../core/core.h"
 
 int main(void)
 {
+    setvbuf(stdout, NULL, _IONBF, 0);
     srand(0);
 
     // Create game

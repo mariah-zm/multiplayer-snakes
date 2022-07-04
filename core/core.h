@@ -30,6 +30,7 @@
 
 #define MSG_SIZE        25
 
+#include <stdint.h>
 #include <stddef.h>
 
 typedef int32_t game_map_t[MAP_HEIGHT][MAP_WIDTH];
@@ -37,15 +38,15 @@ typedef int32_t game_map_t[MAP_HEIGHT][MAP_WIDTH];
 typedef union data 
 {
     game_map_t *map;
-    int32_t player_num;
-    int32_t score; 
-    int32_t is_winner;
+    size_t player_num;
+    size_t score; 
+    size_t winner;
     char msg[MSG_SIZE];
 } data_t;
 
 typedef struct network_data
 {
-    int32_t type;
+    size_t type;
     data_t data;
 } network_data_t;
 

@@ -1,5 +1,7 @@
 #include "servercore.h"
 
+#include <stdlib.h>
+
 direction_t get_random_direction(void)
 {
     int rand_num = rand() % 4;

@@ -21,12 +21,11 @@ int main(int argc, char *argv[])
 
         if (option == OPT_PLAY)
         {
-            client_data_t client_data;
-            open_client_connection(&client_data, argv[1]);
+            int client_socket_fd = open_client_connection(argv[1]);
 
-            handle_client_connection(&client_data);
+            handle_client_connection(client_socket_fd, game_window);
 
-            close_client_connection(&client_data);
+            close_client_connection(client_socket_fd);
         }
         else if (option == OPT_INS)
             show_instructions(game_window);

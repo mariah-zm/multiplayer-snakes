@@ -107,16 +107,12 @@ void show_instructions(WINDOW *window)
     } while (!exit_menu);
 }
 
-void show_game(game_data_t *data)
+void show_game(WINDOW *window, game_map_t *map, size_t player_num)
 {
-    // Pointer for fast access
-    WINDOW *window = data->window;
     werase(window);
-    char *msg = "";
-    game_map_t *map = &data->map;
 
     wattron(window, COLOR_PAIR(SCORE_COL));
-    mvwprintw(window, 0, 0, "Score: %d %70s ", data->score, msg);
+    mvwprintw(window, 0, 0, "Score: 0 %70s ", "You are player %d", player_num);
     wattroff(window, COLOR_PAIR(SCORE_COL));
 
     for (size_t y = 1; y < MAP_HEIGHT; ++y)
@@ -127,7 +123,7 @@ void show_game(game_data_t *data)
                 mvwprintw(window, y, x, "o");
             else if (*map[y][x] != EMPTY)
             {
-                wattron(window, COLOR_PAIR(data->player_num));
+                wattron(window, COLOR_PAIR(player_num));
 
                 // Checking if snake head
                 if (*map[y][x] < 0)
@@ -135,7 +131,7 @@ void show_game(game_data_t *data)
                 else 
                     mvwprintw(window, y, x, " "); 
 
-                wattroff(window, COLOR_PAIR(data->player_num));
+                wattroff(window, COLOR_PAIR(player_num));
             }
         }
     }
@@ -143,15 +139,63 @@ void show_game(game_data_t *data)
     wrefresh(window);
 }
 
+void update_game_map(WINDOW *window, game_map_t *map, size_t player_num)
+{
+    for (size_t y = 1; y < MAP_HEIGHT; ++y)
+    {
+        for (size_t x = 0; x < MAP_WIDTH; ++x)
+        {
+            if (*map[y][x] == FRUIT)
+                mvwprintw(window, y, x, "o");
+            else if (*map[y][x] != EMPTY)
+            {
+                wattron(window, COLOR_PAIR(player_num));
 
-void show_winner(WINDOW *window, int player_num)
+                // Checking if snake head
+                if (*map[y][x] < 0)
+                    mvwprintw(window, y, x, ".");
+                else 
+                    mvwprintw(window, y, x, " "); 
+
+                wattroff(window, COLOR_PAIR(player_num));
+            }
+        }
+    }
+
+    wrefresh(window);
+}
+
+void update_score(WINDOW *window, size_t score)
+{
+    wattron(window, COLOR_PAIR(SCORE_COL));
+    mvwprintw(window, 0, 0, "Score: %d", score);
+    wattroff(window, COLOR_PAIR(SCORE_COL));
+
+    wrefresh(window);
+}
+
+void show_winning_screen(WINDOW *window)
 {
 
 }
 
-void show_losing_screen(WINDOW *window)
+void show_losing_screen(WINDOW *window, size_t player_num)
 {
 
+}
+
+void show_dead_screen(WINDOW *window)
+{
+
+}
+
+void show_message(WINDOW *window, char *msg, size_t score)
+{
+    wattron(window, COLOR_PAIR(SCORE_COL));
+    mvwprintw(window, 0, 0, "Score: %d %70s ", score, msg);
+    wattroff(window, COLOR_PAIR(SCORE_COL));
+
+    wrefresh(window);
 }
 
 void print_title(WINDOW *window)

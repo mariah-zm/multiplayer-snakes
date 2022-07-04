@@ -4,7 +4,7 @@
 #include <ncurses.h>
 
 #include "../../core/core.h"
-#include "clientcore/clientcore.h"
+#include "../clientcore/clientcore.h"
 
 #define OPT_PLAY    1
 #define OPT_INS     2
@@ -37,10 +37,18 @@ size_t show_menu(WINDOW *window);
 
 void show_instructions(WINDOW *window);
 
-void show_game(game_data_t *data);
+void show_game(WINDOW *window, game_map_t *map, size_t player_num);
 
-void show_winner(WINDOW *window, int player_num);
+void update_game_map(WINDOW *window, game_map_t *map, size_t player_num);
 
-void show_losing_screen(WINDOW *window);
+void update_score(WINDOW *window, size_t score);
+
+void show_winning_screen(WINDOW *window);
+
+void show_losing_screen(WINDOW *window, size_t player_num);
+
+void show_dead_screen(WINDOW *window);
+
+void show_message(WINDOW *window, char *msg, size_t score);
 
 #endif
