@@ -98,12 +98,13 @@ void start_game_server(game_server_data_t *server_data)
         make_detached_thread(handle_client_connection, conn_data); 
     }
 
-        // Wait for fruit thread to finish
+    // Wait for fruit thread to finish
     if (pthread_join(fruitThread, &threadRet) != 0)
         print_error("Failed to join fruit thread in game server");
 
-
+    printf("here 4\n");
     free(game);
+    printf("here 5\n");
 }
 
 void server_signal_handler()
@@ -169,7 +170,7 @@ void *handle_client_input(void *arg)
     // Wait for snake to become available
     while (snake == NULL); 
 
-    while (game->is_running) // TODO add player status
+    while (game->is_running && snake->status == PLAYING) // TODO add player status
     {
         // Reading key from client
         if (read(fd, &key_buffer, 1) < 0)
@@ -182,7 +183,10 @@ void *handle_client_input(void *arg)
         
         // Disconnect player
         if (new_dir == 'Q')
+        {
+            snake->status = DISCONNECTED;
             break;
+        }
 
         // Changing direction if entered key is valid
         else if (is_direction_valid(snake->head.direction, new_dir))
@@ -204,7 +208,14 @@ void *handle_client_connection(void *arg)
     printf("INFO: Player %d has joined\n", player_num);
 
     // Start thread to receive client input
-    make_detached_thread(handle_client_input, data); 
+    pthread_t inputThread;
+    void *threadRet;
+
+    if (pthread_create(&inputThread, NULL, handle_client_input, data) != 0)
+    {
+        print_error("Failed to start input thread for player in game server");
+        return 0;
+    }
     
     // Create snake structure
     data->snake = add_player(game, player_num);
@@ -236,8 +247,14 @@ void *handle_client_connection(void *arg)
     else if (snake->status == DEAD)
         printf("INFO: Player %d died\n", player_num);
 
+    // Wait for input thread to finish
+    if (pthread_join(inputThread, &threadRet) != 0)
+        print_error("Failed to join fruit thread in game server");
+
     // Clean up player data
     remove_player(game, snake);
     close(fd);
     free(data);
+
+    return 0;
 }

@@ -2,13 +2,14 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 snake_t *create_snake(size_t player_num, coordinate_t head)
 {
-    snake_t *snake = malloc(sizeof(snake));
+    snake_t *snake = (snake_t *) malloc(sizeof(snake_t));
     snake->length = 2;
     snake->player_num = player_num;
-    snake->head = head;
+    memcpy(&snake->head, &head, sizeof(head));
     snake->status = PLAYING;
 
     if (pthread_mutex_init(&snake->lock, NULL) != 0)
@@ -47,10 +48,9 @@ snake_t *create_snake(size_t player_num, coordinate_t head)
 
 void destroy_snake(snake_t *snake)
 {
-    pthread_mutex_lock(&snake->lock);
+    pthread_mutex_destroy(&snake->lock);
     free(snake);
     snake = NULL;
-    pthread_mutex_unlock(&snake->lock);
 }
 
 void change_snake_direction(snake_t *snake, direction_t direction)
