@@ -82,7 +82,7 @@ void handle_client_connection(int client_socket, WINDOW *window)
 
     if (pthread_create(&updateThread, NULL, update_game, &game_data) != 0)
     {
-        log(ERROR, "Failed to start input thread for player in game server");
+        logger(ERROR, "Failed to start input thread for player in game server");
         return;
     }
 
@@ -103,7 +103,7 @@ void handle_client_connection(int client_socket, WINDOW *window)
 
     // Wait for update thread to finish
     if (pthread_join(updateThread, &threadRet) != 0)
-        log(ERROR, "Failed to join update thread in game server");
+        logger(ERROR, "Failed to join update thread in game server");
 
     if (key_pressed != QUIT)
         show_winner(game_data.game_status);

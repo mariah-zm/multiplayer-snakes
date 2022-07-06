@@ -14,7 +14,7 @@ snake_t *create_snake(size_t player_num, coordinate_t head)
 
     if (pthread_mutex_init(&snake->lock, NULL) != 0)
     {
-        print_error("Failed to initialise mutex for snake");
+        logger(ERROR, "Failed to initialise mutex for snake");
         return NULL;
     }
 

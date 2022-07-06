@@ -6,7 +6,7 @@
 #ifndef INCLUDED_CORE_
 #define INCLUDED_CORE_
 
-#define PORT            7000
+#define PORT            5566
 
 #define MAP_HEIGHT      23    // default height of window - one line for score
 #define MAP_WIDTH       80
@@ -36,6 +36,6 @@ void exit_error(char *msg);
 
 void make_detached_thread(void* (*fn)(void *), void* arg);
 
-void log(log_type_t type, char *msg);
+void logger(log_type_t type, char *msg);
 
 #endif
