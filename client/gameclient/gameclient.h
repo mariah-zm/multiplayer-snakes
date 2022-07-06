@@ -1,12 +1,6 @@
 #ifndef INCLUDED_GAMECLIENT_
 #define INCLUDED_GAMECLIENT_
 
-#include <sys/types.h> 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-
-#include "../../core/core.h"
 #include "../window/window.h"
 
 int open_client_connection(char *hostname);

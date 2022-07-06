@@ -4,13 +4,12 @@
 #include <ncurses.h>
 
 #include "../../core/core.h"
-#include "../clientcore/clientcore.h"
 
 #define OPT_PLAY    1
 #define OPT_INS     2
 #define OPT_EXIT    3
 
-#define WIN_HEIGHT  (MAP_HEIGHT + 1)
+#define WIN_HEIGHT  (MAP_HEIGHT + 1)        // first row is for header
 #define WIN_WIDTH   (MAP_WIDTH)
 
 // Values of Keys
@@ -37,18 +36,8 @@ size_t show_menu(WINDOW *window);
 
 void show_instructions(WINDOW *window);
 
-void show_game(WINDOW *window, game_map_t *map, size_t player_num);
+void show_winner(int game_status);
 
-void update_game_map(WINDOW *window, game_map_t *map, size_t player_num);
-
-void update_score(WINDOW *window, size_t score);
-
-void show_winning_screen(WINDOW *window);
-
-void show_losing_screen(WINDOW *window, size_t player_num);
-
-void show_dead_screen(WINDOW *window);
-
-void show_message(WINDOW *window, char *msg, size_t score);
+void show_game_screen(WINDOW *window, game_map_t map, size_t score);
 
 #endif

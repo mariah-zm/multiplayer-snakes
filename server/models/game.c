@@ -75,6 +75,7 @@ void move_player(game_t *game, snake_t *snake)
     if (is_collided(game->map, snake->head))
     {
         snake->status = DEAD;
+        update_map_coordinate(game, old_tail, EMPTY);
         return;
     }
     else if (value_at_coordindate(game->map, snake->head) == FRUIT)

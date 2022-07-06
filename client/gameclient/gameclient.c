@@ -1,19 +1,27 @@
 #include "gameclient.h"
 
-#include <unistd.h>
 #include <pthread.h>
-#include <ctype.h>
+#include <unistd.h>
 #include <string.h>
+#include <sys/types.h> 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <ctype.h>
+#include <time.h>
 
-// Private functions not part of API
-void write_to_server(int client_socket, char key);
-network_data_t receive_from_server(int client_socket);
+#include "../../core/core.h"
+#include "../window/window.h"
+#include "../clientcore/clientcore.h"
+
+// Private functions declarations
 void *update_game(void *arg);
+void write_to_server(int client_socket, char key);
+bool read_from_server(int client_socket, game_map_t *map);
 bool is_key_valid(char key);
 
 int open_client_connection(char *hostname)
 {
-    // Pointers for quick access
     int socket_fd;
     struct sockaddr_in serv_addr;
     struct hostent *server;
@@ -25,9 +33,8 @@ int open_client_connection(char *hostname)
     // Resolving server name
     if ((server = gethostbyname(hostname)) == NULL) {
 		close(socket_fd);
-
-        char err_msg[30] = "No such host ";
-        strcat(err_msg, hostname);
+        char err_msg[30];
+        sprintf(err_msg, "No such host %s", hostname);
         print_error(err_msg);
     }
 
@@ -60,41 +67,22 @@ void close_client_connection(int client_socket)
 
 void handle_client_connection(int client_socket, WINDOW *window)
 {
-    // Receive player_number
-    network_data_t num_data = receive_from_server(client_socket);
-    if (num_data.type != P_NUM_DATA)
-    {
-        print_error("Expected player number from server");
-        return;
-    }
-
-    // Receive map
-    network_data_t map_data = receive_from_server(client_socket);
-    if (num_data.type != MAP_DATA)
-    {
-        print_error("Expected game map from server");
-        return;
-    }
-
-    // Display intial game window
-    show_game(window, map_data.data.map, num_data.data.player_num);
-
     // Populate data required for gameplay
     game_data_t game_data;
     game_data.client_socket = client_socket;
-    game_data.map = map_data.data.map;
-    game_data.player_num = num_data.data.player_num;
     game_data.score = 0;
     game_data.window = window;
     game_data.game_status = ONGOING;
 
-    // Start thread to receive updates from game server
-    pthread_t gameThread;
+    char key_buffer;
+
+    // Start updating the screen from received map data
+    pthread_t updateThread;
     void *threadRet;
 
-    if (pthread_create(&gameThread, NULL, update_game, &game_data) != 0)
+    if (pthread_create(&updateThread, NULL, update_game, &game_data) != 0)
     {
-        print_error("Failed to start game thread.");
+        print_error("Failed to start input thread for player in game server");
         return;
     }
 
@@ -103,6 +91,9 @@ void handle_client_connection(int client_socket, WINDOW *window)
 
     do
     {
+        memset(&key_buffer, 0, 1);
+
+        // Getting user input and only sending valid keys
         key_pressed = toupper(wgetch(window));
 
         if (is_key_valid(key_pressed))
@@ -110,123 +101,58 @@ void handle_client_connection(int client_socket, WINDOW *window)
         
     } while (key_pressed != QUIT && game_data.game_status == ONGOING);
 
-    game_data.game_status = END;
-    
-    // Disconnect client
-    
-    // Wait for game thread to finish
-    if (pthread_join(gameThread, &threadRet) != 0)
-        print_error("Failed to join game thread");
+    // Wait for update thread to finish
+    if (pthread_join(updateThread, &threadRet) != 0)
+        print_error("Failed to join update thread in game server");
+
+    if (key_pressed != QUIT)
+        show_winner(game_data.game_status);
 }
+
+/*****************************************************************************
+ * PRIVATE FUNCTIONS
+ *****************************************************************************/
 
 void *update_game(void *arg)
 {
-    game_data_t *game_data = (game_data_t *) arg;
-    WINDOW *window = game_data->window;
+    game_data_t *game = (game_data_t *) arg;
 
-    while (game_data->game_status == ONGOING)
+    while (game->game_status == ONGOING)
     {
-        network_data_t server_data = receive_from_server(game_data->client_socket);
-
-        switch (server_data.type)
+        // Recieve updated map from server
+        if (!read_from_server(game->client_socket, &game->map))
         {
-            case MAP_DATA:
-                update_game_map(window, server_data.data.map, 
-                                                        game_data->player_num);
-                break;
-
-            case SCORE_DATA:
-                update_score(window, ++game_data->score);
-                break;
-
-            case ENDGAME_DATA:
-                if (server_data.data.winner == game_data->player_num)
-                    show_winning_screen(window);
-                else 
-                    show_losing_screen(window, server_data.data.winner);
-                game_data->game_status = END;
-                break;
-
-            case DEAD_DATA:
-                show_dead_screen(window);
-                game_data->game_status = END;
-                break;
-
-            case MSG_DATA:
-                show_message(window, server_data.data.msg, game_data->score);
-                break;
+            game->game_status = END;
+            break;
         }
 
+        show_game_screen(game->window, game->map, game->score);
     }
-    
+
+    return 0;
 }
 
 void write_to_server(int client_socket, char key)
 {
     if (write(client_socket, &key, 1) < 0) 
-        print_error("Could not write to socket");
+        exit_error("ERROR writing to socket.");
 }
 
-network_data_t receive_from_server(int client_socket)
+bool read_from_server(int client_socket, game_map_t *map)
 {
-    network_data_t data;
-    char *buffer = (char *) &data.type;
-    size_t const SIZE = sizeof(data.type);
+    char map_buffer[MAP_SIZE];
+    int bytes_read = 0, n;
 
-    size_t bytes_read = 0;
-
-    while (bytes_read < SIZE)
-        bytes_read += read(client_socket, buffer + bytes_read, SIZE-bytes_read);
-
-    // Reset bytes_read for actual data
-    bytes_read = 0;
-
-    char *data_buffer;
-    size_t data_size;
-        
-    switch (data.type)
-    {
-        case MAP_DATA:
-        {
-            data_buffer = (char *) &data.data.map;
-            data_size = MAP_SIZE * sizeof(data.data.map[0][0]);
-            break;
-        }
-        
-        case P_NUM_DATA:
-        {
-            data_buffer = (char *) &data.data.player_num;
-            data_size = sizeof(data.data.player_num);
-            break;
-        }
-
-        case ENDGAME_DATA:
-        {
-            data_buffer = (char *) &data.data.winner;
-            data_size = sizeof(data.data.winner);
-            break;
-        }
-
-        case MSG_DATA:
-        {
-            data_buffer = (char *) &data.data.msg;
-            data_size = MSG_SIZE;
-            break;
-        }
-
-        // These messages do not have data in them
-        case DEAD_DATA:
-        case SCORE_DATA:
-        default:            // default required for no warnings
-            return data;  
+    while(bytes_read < MAP_SIZE){
+        n = read(client_socket, map_buffer + bytes_read, MAP_SIZE - bytes_read);
+        if(n <= 0)
+            return false;
+        bytes_read += n;
     }
 
-    while (bytes_read < SIZE)
-        bytes_read += read(client_socket,
-                            data_buffer + bytes_read, 
-                            data_size-bytes_read);
-    
-    return data;
+    memcpy(map, map_buffer, MAP_SIZE);
+
+    return true;
 }
 
 bool is_key_valid(char key)

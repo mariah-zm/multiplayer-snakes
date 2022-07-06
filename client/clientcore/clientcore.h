@@ -11,7 +11,7 @@
 typedef struct game_data
 {
     int client_socket;
-    game_map_t *map;
+    game_map_t map;
     int game_status;
     size_t score;
     size_t player_num;
