@@ -14,7 +14,8 @@ direction_t get_random_direction(void)
             return LEFT;
         case 2:
             return DOWN;
-        default:            // case 3
+        case 3:    
+        default:            // Required for no warnings       
             return RIGHT;
     }
 }

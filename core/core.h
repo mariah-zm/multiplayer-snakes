@@ -6,12 +6,13 @@
 #ifndef INCLUDED_CORE_
 #define INCLUDED_CORE_
 
-#define PORT            5566
+#define PORT            5678
 
-#define MAP_HEIGHT      23    // default height of window - one line for score
+#define MAP_HEIGHT      24    // default height of window - one line for score
 #define MAP_WIDTH       80
-#define MAP_SIZE        (MAP_HEIGHT*MAP_WIDTH)
+#define MAP_SIZE        (MAP_HEIGHT * MAP_WIDTH * sizeof(int))
 
+// Keyboard keys for directions
 #define UP_KEY          'W'
 #define LEFT_KEY        'A'
 #define DOWN_KEY        'S'
@@ -21,34 +22,9 @@
 #define EMPTY           0
 #define FRUIT           100 
 
-#define MAP_DATA        0
-#define P_NUM_DATA      1
-#define SCORE_DATA      2
-#define ENDGAME_DATA    3
-#define DEAD_DATA       4
-#define MSG_DATA        5
-
-#define MSG_SIZE        25
-
-#include <stdint.h>
 #include <stddef.h>
 
-typedef int32_t game_map_t[MAP_HEIGHT][MAP_WIDTH];
-
-typedef union data 
-{
-    game_map_t *map;
-    size_t player_num;
-    size_t score; 
-    size_t winner;
-    char msg[MSG_SIZE];
-} data_t;
-
-typedef struct network_data
-{
-    size_t type;
-    data_t data;
-} network_data_t;
+typedef int game_map_t[MAP_HEIGHT][MAP_WIDTH];
 
 void print_error(char *msg);
 

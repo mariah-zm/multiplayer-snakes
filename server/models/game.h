@@ -1,50 +1,33 @@
 #ifndef INCLUDED_GAME_
 #define INCLUDED_GAME_
 
-#include <stdbool.h> 
-#include <pthread.h> 
+#include <stdbool.h>
+#include <pthread.h>
 
+#include "../../core/core.h"
 #include "../servercore/servercore.h"
 #include "snake.h"
 
-#define MAX_PLAYERS     7
-
-typedef struct game 
+typedef struct game
 {
-    pthread_mutex_t lock;
     game_map_t map;
-    size_t num_players;
+    pthread_mutex_t lock;
     bool is_running;
-    snake_t *snakes[MAX_PLAYERS];
-    size_t snakes_size;
+    int winner;
 } game_t;
 
 game_t *create_game(void);
 
-void remove_player(game_t *game, snake_t *snake);
+void add_fruit(game_t *game);
 
-snake_t *add_player(game_t *game, int player_fd);
+snake_t *add_player(game_t *game, size_t player_num);
+
+void remove_player(game_t *game, snake_t *snake);
 
 void move_player(game_t *game, snake_t *snake);
 
-void add_fruit(game_t *game);
-
-void update_map_coordinate(game_t *game, coordinate_t const *coord, int value);
-
-int value_at_coordindate(game_t const *game, coordinate_t const *coord);
-
-bool is_collided(game_t *game, coordinate_t *snake_head);
-
-bool is_outside_border(coordinate_t *coord);
-
-bool is_coord_valid(game_t const *game, coordinate_t const *coord, int type);
-
-bool is_coord_at_border(game_t const *game, coordinate_t const *coord, int type);
-
-bool is_isolated(game_t const *game, coordinate_t const *coord);
+void feed_player(game_t *game, snake_t *snake);
 
 bool is_direction_valid(direction_t current_dir, direction_t next_dir);
-
-void reset_game(game_t *game);
 
 #endif

@@ -3,13 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <string.h>
 
 void print_error(char *msg)
 {
-    char new_msg[100] = "ERR: ";
-    strcat(new_msg, msg);
-    strcat(new_msg, "\n");
+    char new_msg[100] = " ";
+    sprintf(new_msg, "ERR: %s\n", msg);
     perror(new_msg);
 }
 

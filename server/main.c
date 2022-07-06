@@ -1,26 +1,26 @@
-#include <stdlib.h>
-#include <stdio.h>
-
-#include "gameserver/gameserver.h"
 #include "../core/core.h"
+#include "gameserver/gameserver.h"
+
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
 
 int main(void)
 {
-    setvbuf(stdout, NULL, _IONBF, 0);
-    srand(0);
+    srand(time(NULL));                          // Random seed
+    signal(SIGINT, server_signal_handler);      // Signal handler for Ctrl+C
 
-    // Create game
-    game_t *game = create_game();
+    // Initialise server data and game
     game_server_data_t game_server;
-    game_server.game = game;
-
-    // Initialise server
+    
+    // Initialising server by opening connection
     init_game_server(&game_server);
 
+    // Start game server and start accepting connections
     start_game_server(&game_server);
 
     // Close server socket on termination
     close_game_server(&game_server);  
-    
+
     return 0; 
 }

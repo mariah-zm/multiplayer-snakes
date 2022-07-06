@@ -5,8 +5,6 @@
 
 #include "../../core/core.h"
 
-#define MAX_SNAKE_LEN   15
-
 typedef enum direction
 {
     UP = UP_KEY, 
@@ -26,7 +24,8 @@ typedef enum player_status
 {
     PLAYING,
     WINNER,
-    DEAD
+    DEAD,
+    DISCONNECTED
 } player_status_t;
 
 direction_t get_random_direction(void);
