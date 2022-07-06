@@ -35,7 +35,7 @@ int open_client_connection(char *hostname)
 		close(socket_fd);
         char err_msg[30];
         sprintf(err_msg, "No such host %s", hostname);
-        print_error(err_msg);
+        exit_error(err_msg);
     }
 
     // Populating serv_addr structure 
@@ -82,7 +82,7 @@ void handle_client_connection(int client_socket, WINDOW *window)
 
     if (pthread_create(&updateThread, NULL, update_game, &game_data) != 0)
     {
-        print_error("Failed to start input thread for player in game server");
+        log(ERROR, "Failed to start input thread for player in game server");
         return;
     }
 
@@ -103,7 +103,7 @@ void handle_client_connection(int client_socket, WINDOW *window)
 
     // Wait for update thread to finish
     if (pthread_join(updateThread, &threadRet) != 0)
-        print_error("Failed to join update thread in game server");
+        log(ERROR, "Failed to join update thread in game server");
 
     if (key_pressed != QUIT)
         show_winner(game_data.game_status);
@@ -135,7 +135,7 @@ void *update_game(void *arg)
 void write_to_server(int client_socket, char key)
 {
     if (write(client_socket, &key, 1) < 0) 
-        exit_error("ERROR writing to socket.");
+        exit_error("Could not write to socket");
 }
 
 bool read_from_server(int client_socket, game_map_t *map)

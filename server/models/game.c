@@ -20,6 +20,7 @@ game_t *create_game(void)
 
     game->is_running = true;
     game->winner = 0;
+    game->num_players = 0;
 
     if (pthread_mutex_init(&game->lock, NULL) != 0)
         exit_error("Failed to initialise mutex for game map");
@@ -53,6 +54,10 @@ snake_t *add_player(game_t *game, size_t player_num)
     update_map_coordinate(game, snake->head, -snake->player_num);
     update_map_coordinate(game, snake->tail, snake->player_num);
 
+    pthread_mutex_lock(&game->lock);
+    ++game->num_players;
+    pthread_mutex_unlock(&game->lock);
+
     return snake;
 }
 
@@ -65,6 +70,10 @@ void remove_player(game_t *game, snake_t *snake)
         update_map_coordinate(game, snake->body[idx], EMPTY);
 
     destroy_snake(snake);
+
+    pthread_mutex_lock(&game->lock);
+    --game->num_players;
+    pthread_mutex_unlock(&game->lock);
 }
 
 void move_player(game_t *game, snake_t *snake)

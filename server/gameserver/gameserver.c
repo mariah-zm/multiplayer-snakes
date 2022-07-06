@@ -48,13 +48,14 @@ void init_game_server(game_server_data_t *server_data)
 
     server_socket = server_data->server_socket_fd;
 
-    printf("INFO: Game server is running on port %d\n", PORT);
+    char msg[100];
+    sprintf(msg, "Game server is running on port %d", PORT);
+    log(INFO, msg);
 }
 
 void close_game_server(game_server_data_t *server_data)
 {
     close(server_data->server_socket_fd);
-    // TODO close client connections
 }
 
 void start_game_server(game_server_data_t *server_data)
@@ -68,10 +69,7 @@ void start_game_server(game_server_data_t *server_data)
     void *threadRet;
 
     if (pthread_create(&fruitThread, NULL, fruit_thread_fn, game) != 0)
-    {
-        print_error("Failed to start fruit thread in game server");
-        return;
-    }
+        exit_error("Failed to start fruit thread in game server");
 
     for (int i = 0; ; ++i)
     {
@@ -81,12 +79,11 @@ void start_game_server(game_server_data_t *server_data)
                 (struct sockaddr *) &server_data->client_addrs[i], &client_len);
 
         if (server_data->client_socket_fds[i] < 0) 
-            exit_error("ERROR on accept");
+            log(ERROR, "Could not accept client");
 
         // Reset game if someone won
         if (!game->is_running)
         {
-            printf("Il-logħba ġiet irrisettjata!\n");
             game->is_running = true;
         }
 
@@ -100,16 +97,14 @@ void start_game_server(game_server_data_t *server_data)
 
     // Wait for fruit thread to finish
     if (pthread_join(fruitThread, &threadRet) != 0)
-        print_error("Failed to join fruit thread in game server");
+        log(ERROR, "Failed to join fruit thread in game server");
 
-    printf("here 4\n");
     free(game);
-    printf("here 5\n");
 }
 
 void server_signal_handler()
 {
-    printf("\nServer interrupted. Closing...\n");
+    log(ERROR, "Server interrupted. Closing...");
     close(server_socket);
     exit(0);
 }
@@ -138,19 +133,23 @@ bool write_to_client(game_map_t map, int client_socket)
 
 void *fruit_thread_fn(void *arg)
 {
-    printf("INFO: Started thread for adding fruit\n");
+    log(INFO, "Started thread for adding fruit");
     game_t *game = (game_t *) arg;
     
     while (true)
     {
-        add_fruit(game);
+        // Only adding fruit if there are players in the game
+        while (game->num_players > 0)
+        {        
+            add_fruit(game);
 
-        // Creating random intervals between 2 and 5 seconds
-        int milli_seconds = (rand() % 3000) + 2000;
-        struct timespec ts;
-        ts.tv_sec = milli_seconds / 1000;
-        ts.tv_nsec = (milli_seconds % 1000) * 1000000L; // range 0 to 999999999
-        nanosleep(&ts, NULL);
+            // Creating random intervals between 2 and 5 seconds
+            int milli_seconds = (rand() % 3000) + 2000;
+            struct timespec ts;
+            ts.tv_sec = milli_seconds / 1000;
+            ts.tv_nsec = (milli_seconds % 1000) * 1000000L; // range 0 to 999999999
+            nanosleep(&ts, NULL);
+        }
     }
 }
 
@@ -175,7 +174,9 @@ void *handle_client_input(void *arg)
         // Reading key from client
         if (read(fd, &key_buffer, 1) < 0)
         {
-            printf("ERR: Could not read input from player %ld", player_num);
+            char msg[100];
+            sprintf(msg, "Could not read input from player %ld", player_num);
+            log(ERROR, msg);
             break;
         }
 
@@ -203,9 +204,11 @@ void *handle_client_connection(void *arg)
     // For quick access
     game_t *game = data->game;
     int fd = data->client_socket;
-    
     int player_num = fd-3;
-    printf("INFO: Player %d has joined\n", player_num);
+
+    char msg[100];
+    sprintf(msg, "Player %d has joined\n", player_num);
+    log(INFO, msg);
 
     // Start thread to receive client input
     pthread_t inputThread;
@@ -213,7 +216,7 @@ void *handle_client_connection(void *arg)
 
     if (pthread_create(&inputThread, NULL, handle_client_input, data) != 0)
     {
-        print_error("Failed to start input thread for player in game server");
+        log(ERROR, "Failed to start input thread for player in game server");
         return 0;
     }
     
@@ -241,15 +244,27 @@ void *handle_client_connection(void *arg)
     } while (game->is_running && snake->status == PLAYING);
 
     if (snake->status == WINNER)
-        printf("INFO: Player %d won!\n", player_num);
+    {
+        char msg[100];
+        sprintf(msg, "Player %d won!\n", player_num);
+        log(INFO, msg);
+    }
     else if (snake->status == DISCONNECTED)
-        printf("INFO: Player %d has left the game\n", player_num);
+    {
+        char msg[100];
+        sprintf(msg, "Player %d has left the game\n", player_num);
+        log(INFO, msg);
+    }    
     else if (snake->status == DEAD)
-        printf("INFO: Player %d died\n", player_num);
+    {
+        char msg[100];
+        sprintf(msg, "Player %d died\n", player_num);
+        log(INFO, msg);
+    }    
 
     // Wait for input thread to finish
     if (pthread_join(inputThread, &threadRet) != 0)
-        print_error("Failed to join fruit thread in game server");
+        log(ERROR, "Failed to join fruit thread in game server");
 
     // Clean up player data
     remove_player(game, snake);

@@ -14,6 +14,7 @@ typedef struct game
     pthread_mutex_t lock;
     bool is_running;
     int winner;
+    size_t num_players;
 } game_t;
 
 game_t *create_game(void);

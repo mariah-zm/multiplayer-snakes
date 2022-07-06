@@ -4,16 +4,26 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-void print_error(char *msg)
+void log(log_type_t type, char *msg)
 {
-    char new_msg[100] = " ";
-    sprintf(new_msg, "ERR: %s\n", msg);
-    perror(new_msg);
+    switch (type)
+    {
+        case ERROR:
+            fprintf(stderr, "ERR: %s\n", msg);
+            break;
+
+        case INFO:
+            printf("INFO: %s\n", msg);
+            break;
+        
+        default:
+            break;
+    }
 }
 
 void exit_error(char *msg)
 {
-    print_error(msg);
+    log(ERROR, msg);
     fflush(stdout);
     exit(1);
 }

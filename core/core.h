@@ -24,12 +24,18 @@
 
 #include <stddef.h>
 
-typedef int game_map_t[MAP_HEIGHT][MAP_WIDTH];
+typedef enum log_type
+{
+    ERROR,
+    INFO
+} log_type_t;
 
-void print_error(char *msg);
+typedef int game_map_t[MAP_HEIGHT][MAP_WIDTH];
 
 void exit_error(char *msg);
 
 void make_detached_thread(void* (*fn)(void *), void* arg);
+
+void log(log_type_t type, char *msg);
 
 #endif
