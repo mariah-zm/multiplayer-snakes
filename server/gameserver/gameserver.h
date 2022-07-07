@@ -24,12 +24,6 @@ typedef struct client_conn_data
     int client_socket;
 } client_conn_data_t;
 
-typedef struct data_to_send
-{
-    communication_data_t data;
-    int client_socket_fd;
-} data_to_send_t;
-
 void init_game_server(game_server_data_t *server_data);
 
 void close_game_server(game_server_data_t *server_data);

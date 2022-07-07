@@ -15,7 +15,7 @@
 int server_socket;
 
 // Private functions declarations
-bool write_to_client(communication_data_t data, int client_socket);
+bool write_to_client(game_map_t map, int client_socket);
 bool write_value_to_client(size_t value, int client_socket);
 bool write_map_to_client(game_map_t map, int client_socket);
 void *fruit_thread_fn(void *arg);
@@ -115,55 +115,12 @@ void server_signal_handler()
  * PRIVATE FUNCTIONS
  *****************************************************************************/
 
-bool write_to_client(communication_data_t data, int client_socket)
-{
-    // Sending type of data being sent first
-    if (!write_value_to_client(data.type, client_socket))
-        return false;
-
-    switch (data.type)
-    {
-        case MAP_DATA:
-            return write_map_to_client(*data.data.map, client_socket);
-        case P_NUM_DATA:
-            return write_value_to_client(data.data.player_num, client_socket);
-        case SCORE_DATA:
-        case DEAD_DATA:
-            // return true;
-        case ENDGAME_DATA:
-            // return send_value_to_client(data->data.winner, client_fd);
-        case MSG_DATA:
-            // return send_buffer_to_client(data->data.msg, MSG_SIZE, client_fd);
-        default: return false;  // Required for no warnings
-    }
-}
-
-bool write_value_to_client(size_t value, int client_socket)
-{
-    size_t const SIZE = sizeof(value);
-    char buffer[SIZE];
-    memset(buffer, 0, SIZE);
-    memcpy(buffer, &value, SIZE);
-
-    size_t bytes_sent = 0;
-
-    while (bytes_sent < SIZE)
-    {
-        bytes_sent += write(client_socket, buffer, SIZE);
-
-        if (bytes_sent < 0)
-            return false;
-    }
-
-    return true;
-}
-
-bool write_map_to_client(game_map_t map, int client_socket)
+bool write_to_client(game_map_t map, int client_socket)
 {
     char buffer[MAP_SIZE];
     memcpy(buffer, map, MAP_SIZE);
 
-    size_t bytes_sent = 0;
+        size_t bytes_sent = 0;
 
     while (bytes_sent < MAP_SIZE)
     {
@@ -171,8 +128,8 @@ bool write_map_to_client(game_map_t map, int client_socket)
 
         if (bytes_sent < 0)
             return false;
-
     }
+
     return true;
 }
 
@@ -277,13 +234,9 @@ void *handle_client_connection(void *arg)
     ts.tv_sec = 0;
     ts.tv_nsec = 300000000L; // every 0.3s, snakes move
 
-    communication_data_t map_data;
-    map_data.type = MAP_DATA;
-    map_data.data.map = &game->map;
-
     do 
     {
-        if (!write_to_client(map_data, fd))
+        if (!write_to_client(game->map, fd))
         {
             snake->status = DISCONNECTED;
             break;
