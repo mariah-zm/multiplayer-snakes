@@ -60,7 +60,7 @@ WINDOW *create_game_window()
 
 void destroy_game_window(WINDOW *window)
 {
-    wclear(window);
+    werase(window);
     delwin(window);
     echo(); 
     curs_set(1);  
@@ -122,7 +122,7 @@ void show_winner(int game_status)
 
 void show_game_screen(WINDOW *window, game_map_t map, size_t score)
 {    
-    wclear(window);
+    werase(window);
 
     // Print header with score
     wattron(window, COLOR_PAIR(SCORE_COL));
@@ -140,13 +140,13 @@ void show_game_screen(WINDOW *window, game_map_t map, size_t score)
             if (current_value == FRUIT)
             {
                 wattron(window, COLOR_PAIR(COLOR_BLACK));
-                mvwaddstr(window, y+1, x, "o"); 
+                mvwprintw(window, y+1, x, "o"); 
                 wattroff(window, COLOR_PAIR(COLOR_BLACK));
             }
             else if (current_value == EMPTY)
             {
                 wattron(window, COLOR_PAIR(COLOR_BLACK));
-                mvwaddstr(window, y+1, x, " "); 
+                mvwprintw(window, y+1, x, " "); 
                 wattroff(window, COLOR_PAIR(COLOR_BLACK));
             } 
             else // Player
@@ -155,9 +155,9 @@ void show_game_screen(WINDOW *window, game_map_t map, size_t score)
 
                 // Checking if snake head
                 if (map[y][x] < 0)
-                    mvwaddstr(window, y+1, x, ".");
+                    mvwprintw(window, y+1, x, ".");
                 else 
-                    mvwaddstr(window, y+1, x, " "); 
+                    mvwprintw(window, y+1, x, " "); 
 
                 wattroff(window, COLOR_PAIR(colour));
             }
@@ -199,7 +199,7 @@ void print_menu(WINDOW *window, size_t option)
     size_t const MENU_INS2_WIDTH = 28;   
     size_t const MENU_INS2_MID_X = (WIN_WIDTH-MENU_INS2_WIDTH)/2;
 
-    wclear(window);
+    werase(window);
     print_title(window);
     
     // Menu
@@ -226,7 +226,7 @@ void print_instructions(WINDOW *window)
     size_t const INS_INS_WIDTH = 26;
     size_t const INS_INS_MID_X = (WIN_WIDTH-INS_INS_WIDTH)/2;
 
-    wclear(window);
+    werase(window);
     print_title(window);
 
     mvwaddstr(window, MID_Y + 7, INS_MID_X, 

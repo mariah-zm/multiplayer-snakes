@@ -72,7 +72,7 @@ void handle_client_connection(int client_socket, WINDOW *window)
     game_data.client_socket = client_socket;
     game_data.score = 0;
     game_data.window = window;
-    game_data.game_status = ONGOING;
+    game_data.player_status = PLAYING;
 
     char key_buffer;
 
@@ -99,14 +99,19 @@ void handle_client_connection(int client_socket, WINDOW *window)
         if (is_key_valid(key_pressed))
             write_to_server(client_socket, key_pressed);
         
-    } while (key_pressed != QUIT && game_data.game_status == ONGOING);
+        if (key_pressed == QUIT)
+            game_data.player_status = DISCONNECTED;
+        
+    } while (key_pressed != QUIT && game_data.player_status == PLAYING);
 
     // Wait for update thread to finish
     if (pthread_join(updateThread, &threadRet) != 0)
         logger(ERROR, "Failed to join update thread in game server");
 
-    if (key_pressed != QUIT)
-        show_winner(game_data.game_status);
+    if (game_data.player_status == WINNER)
+        show_winner(game_data.player_num);
+    if (game_data.player_status == LOSER || game_data.player_status == DEAD)
+        show_winner(game_data.player_num); // show_loser();
 }
 
 /*****************************************************************************
@@ -117,12 +122,12 @@ void *update_game(void *arg)
 {
     game_data_t *game = (game_data_t *) arg;
 
-    while (game->game_status == ONGOING)
+    while (game->player_status == PLAYING)
     {
         // Recieve updated map from server
         if (!read_from_server(game->client_socket, game))
         {
-            game->game_status = END;
+            game->player_status = DISCONNECTED;
             break;
         }
 

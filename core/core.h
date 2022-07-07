@@ -6,7 +6,7 @@
 #ifndef INCLUDED_CORE_
 #define INCLUDED_CORE_
 
-#define PORT            5566
+#define PORT            5577
 
 #define MAP_HEIGHT      23    // default height of window - one line for score
 #define MAP_WIDTH       80

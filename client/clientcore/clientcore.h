@@ -5,14 +5,17 @@
 
 #include <ncurses.h>
 
-#define END     0
-#define ONGOING 1
+#define DEAD            -1
+#define PLAYING         1
+#define WINNER          2
+#define LOSER           3
+#define DISCONNECTED    4
 
 typedef struct game_data
 {
     int client_socket;
     game_map_t map;
-    int game_status;
+    int player_status;
     size_t score;
     size_t player_num;
     WINDOW *window;
