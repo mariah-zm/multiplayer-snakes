@@ -12,12 +12,6 @@
 
 #include <ncurses.h>
 
-#define DEAD            -1
-#define PLAYING         1
-#define WINNER          2
-#define LOSER           3
-#define DISCONNECTED    4
-
 typedef struct game_data
 {
     int client_socket;

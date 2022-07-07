@@ -15,6 +15,7 @@
 int server_socket;
 
 // Private functions declarations
+void make_detached_thread(void* (*fn)(void *), void* arg);
 bool write_to_client(game_map_t map, int client_socket);
 bool write_value_to_client(size_t value, int client_socket);
 bool write_map_to_client(game_map_t map, int client_socket);
@@ -110,6 +111,20 @@ void server_signal_handler()
  * PRIVATE FUNCTIONS
  *****************************************************************************/
 
+void make_detached_thread(void* (*fn)(void *), void* arg)
+{
+    pthread_t       tid;
+    pthread_attr_t  attr;
+
+    if (pthread_attr_init(&attr) != 0)
+        logger(ERROR, "Failed to initialise thread");
+
+    if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0)
+        pthread_create(&tid, &attr, fn, arg);
+    else
+        pthread_attr_destroy(&attr);
+}
+
 bool write_to_client(game_map_t map, int client_socket)
 {
     char buffer[MAP_SIZE];
@@ -140,8 +155,8 @@ void *fruit_thread_fn(void *arg)
         {        
             add_fruit(game);
 
-            // Creating random intervals between 2 and 5 seconds
-            int milli_seconds = (rand() % 3000) + 2000;
+            // Creating random intervals between 3 and 6 seconds
+            int milli_seconds = (rand() % 3000) + 3000;
             struct timespec ts;
             ts.tv_sec = milli_seconds / 1000;
             ts.tv_nsec = (milli_seconds % 1000) * 1000000L; // range 0 to 999999999
@@ -242,6 +257,7 @@ void *handle_client_connection(void *arg)
     // Time structure for sleep
     struct timespec ts;
     ts.tv_sec = 0;
+    // ts.tv_nsec = 0;
     ts.tv_nsec = PLAYING_SPEED * 10000000L; // every 0.15s, snakes move
 
     do 

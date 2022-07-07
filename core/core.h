@@ -43,8 +43,6 @@ typedef enum log_type
 
 void exit_error(char *msg);
 
-void make_detached_thread(void* (*fn)(void *), void* arg);
-
 void logger(log_type_t type, char *msg);
 
 #endif

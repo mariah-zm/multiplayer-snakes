@@ -9,6 +9,12 @@
 #ifndef INCLUDED_GAMECLIENT_
 #define INCLUDED_GAMECLIENT_
 
+#define DEAD            -1
+#define PLAYING         1
+#define WINNER          2
+#define LOSER           3
+#define DISCONNECTED    4
+
 #include "../window/window.h"
 
 int open_client_connection(char *hostname);
