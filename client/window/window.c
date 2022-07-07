@@ -115,18 +115,13 @@ void show_instructions(WINDOW *window)
     } while (!exit_menu);
 }
 
-void show_winner(int game_status)
-{
-
-}
-
-void show_game_screen(WINDOW *window, game_map_t map)
+void show_game(WINDOW *window, game_map_t map)
 {    
     werase(window);
 
     // Print header with score
     wattron(window, COLOR_PAIR(SCORE_COL));
-    mvwprintw(window, 0, 0, "Score: %-73d", map[DATA_ROW][SCORE_IDX]);
+    mvwprintw(window, 0, 0, "Score: %d %71s", map[DATA_ROW][SCORE_IDX], " ");
     wattroff(window, COLOR_PAIR(SCORE_COL));
 
     // Printing values in map (ignoring data row)
@@ -163,6 +158,18 @@ void show_game_screen(WINDOW *window, game_map_t map)
             }
         }
     }
+
+    wrefresh(window);
+}
+
+void show_message(WINDOW *window, char *msg)
+{
+    werase(window);
+
+    // Print header with score
+    wattron(window, COLOR_PAIR(SCORE_COL));
+    mvwprintw(window, 0, 0, "%-53s Press any key to continue ", msg);
+    wattroff(window, COLOR_PAIR(SCORE_COL)); 
 
     wrefresh(window);
 }

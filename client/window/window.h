@@ -36,8 +36,8 @@ size_t show_menu(WINDOW *window);
 
 void show_instructions(WINDOW *window);
 
-void show_winner(int game_status);
+void show_game(WINDOW *window, game_map_t map);
 
-void show_game_screen(WINDOW *window, game_map_t map);
+void show_message(WINDOW *window, char *msg);
 
 #endif

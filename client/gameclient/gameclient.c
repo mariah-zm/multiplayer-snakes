@@ -107,11 +107,6 @@ void handle_client_connection(int client_socket, WINDOW *window)
     // Wait for update thread to finish
     if (pthread_join(updateThread, &threadRet) != 0)
         logger(ERROR, "Failed to join update thread in game server");
-
-    if (game_data.player_status == WINNER)
-        show_winner(game_data.player_num);
-    if (game_data.player_status == LOSER || game_data.player_status == DEAD)
-        show_winner(game_data.player_num); // show_loser();
 }
 
 /*****************************************************************************
@@ -145,10 +140,24 @@ void *update_game(void *arg)
                 game->player_status = WINNER;
             else
                 game->player_status = LOSER;
+
+            // Setting player_num to winner to display message later
+            game->player_num = winner;
         }
 
-        show_game_screen(game->window, game->map);
+        show_game(game->window, game->map);
     }
+
+    if (game->player_status == WINNER)
+        show_message(game->window, "You win!");
+    else if (game->player_status == LOSER)
+    {
+        char msg[80];
+        sprintf(msg, " You lose! Player %ld won.", game->player_num);
+        show_message(game->window, msg);
+    }
+    else if (game->player_status == DEAD)
+        show_message(game->window, "You lose!");
 
     return 0;
 }

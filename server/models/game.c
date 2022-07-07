@@ -99,7 +99,7 @@ void move_player(game_t *game, snake_t *snake)
     update_map_coordinate(game, old_tail, EMPTY);
 
     // Checking if player is a winner
-    if (snake->length == 15)
+    if (snake->length == MAX_SNAKE_LEN)
     {
         snake->status = WINNER;
         game->winner = snake->player_num;
