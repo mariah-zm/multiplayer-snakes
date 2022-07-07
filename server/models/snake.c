@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-snake_t *create_snake(size_t player_num, coordinate_t head)
+snake_t *create_snake(int player_num, coordinate_t head)
 {
     snake_t *snake = (snake_t *) malloc(sizeof(snake_t));
     snake->length = 2;

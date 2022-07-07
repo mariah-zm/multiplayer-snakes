@@ -120,16 +120,16 @@ void show_winner(int game_status)
 
 }
 
-void show_game_screen(WINDOW *window, game_map_t map, size_t score)
+void show_game_screen(WINDOW *window, game_map_t map)
 {    
     werase(window);
 
     // Print header with score
     wattron(window, COLOR_PAIR(SCORE_COL));
-    mvwprintw(window, 0, 0, "Score: %-73d", score);
+    mvwprintw(window, 0, 0, "Score: %-73d", map[DATA_ROW][SCORE_IDX]);
     wattroff(window, COLOR_PAIR(SCORE_COL));
 
-    // Printing values in map
+    // Printing values in map (ignoring data row)
     for (size_t y = 0; y < MAP_HEIGHT; ++y)
     {
         for (size_t x = 0; x < MAP_WIDTH; ++x)
@@ -178,15 +178,15 @@ void print_title(WINDOW *window)
     size_t const TITLE_MID_X = (WIN_WIDTH-TITLE_WIDTH)/2;
 
     wattron(window, COLOR_PAIR(TITLE_COL)); 
-    mvwaddstr(window, MID_Y, TITLE_MID_X, 
+    mvwprintw(window, MID_Y, TITLE_MID_X, 
                         "   _____             __");
-    mvwaddstr(window, MID_Y + 1, TITLE_MID_X, 
+    mvwprintw(window, MID_Y + 1, TITLE_MID_X, 
                         "  / ___/____  ____ _/ /_____  _____");
-    mvwaddstr(window, MID_Y + 2, TITLE_MID_X, 
+    mvwprintw(window, MID_Y + 2, TITLE_MID_X, 
                         "  \\__ \\/ __ \\/ __ `/ //_/ _ \\/ ___/");
-    mvwaddstr(window, MID_Y + 3, TITLE_MID_X, 
+    mvwprintw(window, MID_Y + 3, TITLE_MID_X, 
                         " ___/ / / / / /_/ / ,< /  __(__  )");
-    mvwaddstr(window, MID_Y + 4, TITLE_MID_X, 
+    mvwprintw(window, MID_Y + 4, TITLE_MID_X, 
                         "/____/_/ /_/\\__,_/_/|_|\\___/____/");
     wattroff(window, COLOR_PAIR(TITLE_COL));
 }
@@ -204,15 +204,15 @@ void print_menu(WINDOW *window, size_t option)
     
     // Menu
     wattron(window, COLOR_PAIR(OPTIONS_COL));
-    mvwaddstr(window, MID_Y + 7, MENU_MID_X, "> Join Game");
+    mvwprintw(window, MID_Y + 7, MENU_MID_X, "> Join Game");
     wattroff(window, COLOR_PAIR(OPTIONS_COL));
-    mvwaddstr(window, MID_Y + 8, MENU_MID_X, "  How to Play");
-    mvwaddstr(window, MID_Y + 9, MENU_MID_X, "  Exit");
+    mvwprintw(window, MID_Y + 8, MENU_MID_X, "  How to Play");
+    mvwprintw(window, MID_Y + 9, MENU_MID_X, "  Exit");
 
     // Menu Instructions
-    mvwaddstr(window, MID_Y + 12, MENU_INS1_MID_X, 
+    mvwprintw(window, MID_Y + 12, MENU_INS1_MID_X, 
                         "Navigate options using the UP and DOWN arrow keys");
-    mvwaddstr(window, MID_Y + 13, MENU_INS2_MID_X, 
+    mvwprintw(window, MID_Y + 13, MENU_INS2_MID_X, 
                         "Press ENTER to choose option");
     
     wrefresh(window);
@@ -231,24 +231,24 @@ void print_instructions(WINDOW *window)
 
     mvwaddstr(window, MID_Y + 7, INS_MID_X, 
                 "How to Play");
-    mvwaddstr(window, MID_Y + 9, INS_MID_X, 
+    mvwprintw(window, MID_Y + 9, INS_MID_X, 
                 "- Change the direction of movement by pressing the");
-    mvwaddstr(window, MID_Y + 10, INS_MID_X, 
+    mvwprintw(window, MID_Y + 10, INS_MID_X, 
                 "  W, A, S, D keys.");
-    mvwaddstr(window, MID_Y + 11, INS_MID_X, 
+    mvwprintw(window, MID_Y + 11, INS_MID_X, 
                 "- Fruit will appear randomly on the screen. Eat them to");
-    mvwaddstr(window, MID_Y + 12, INS_MID_X, 
+    mvwprintw(window, MID_Y + 12, INS_MID_X, 
                 "  grow and earn points.");
-    mvwaddstr(window, MID_Y + 13, INS_MID_X, 
+    mvwprintw(window, MID_Y + 13, INS_MID_X, 
                 "- If you reach 13 points first, you win.");
-    mvwaddstr(window, MID_Y + 14, INS_MID_X, 
+    mvwprintw(window, MID_Y + 14, INS_MID_X, 
                 "- If you collide with the walls, other snakes or yourself,"); 
-    mvwaddstr(window, MID_Y + 15, INS_MID_X, 
+    mvwprintw(window, MID_Y + 15, INS_MID_X, 
                 "  you die.");        
-    mvwaddstr(window, MID_Y + 16, INS_MID_X, 
+    mvwprintw(window, MID_Y + 16, INS_MID_X, 
                 "- To quit, press Q at any time during the game.");
 
-     mvwaddstr(window, MID_Y + 19, INS_INS_MID_X, 
+     mvwprintw(window, MID_Y + 19, INS_INS_MID_X, 
                 "Press BACKSPACE to go back");
     
     wrefresh(window);
@@ -259,25 +259,25 @@ void update_menu(WINDOW *window, size_t option)
     if (option == 1)
     {   
         wattron(window, COLOR_PAIR(OPTIONS_COL)); 
-        mvwaddstr(window, MID_Y + 7, MENU_MID_X, "> Join Game");
+        mvwprintw(window, MID_Y + 7, MENU_MID_X, "> Join Game");
         wattroff(window, COLOR_PAIR(OPTIONS_COL)); 
-        mvwaddstr(window, MID_Y + 8, MENU_MID_X, "  How to Play");
-        mvwaddstr(window, MID_Y + 9, MENU_MID_X, "  Exit");
+        mvwprintw(window, MID_Y + 8, MENU_MID_X, "  How to Play");
+        mvwprintw(window, MID_Y + 9, MENU_MID_X, "  Exit");
     }
     else if (option == 2)
     {
-        mvwaddstr(window, MID_Y + 7, MENU_MID_X, "  Join Game");
+        mvwprintw(window, MID_Y + 7, MENU_MID_X, "  Join Game");
         wattron(window, COLOR_PAIR(OPTIONS_COL));
-        mvwaddstr(window, MID_Y + 8, MENU_MID_X, "> How to Play");
+        mvwprintw(window, MID_Y + 8, MENU_MID_X, "> How to Play");
         wattroff(window, COLOR_PAIR(OPTIONS_COL));
-        mvwaddstr(window, MID_Y + 9, MENU_MID_X, "  Exit");
+        mvwprintw(window, MID_Y + 9, MENU_MID_X, "  Exit");
     }
     else if (option == 3)
     {
-        mvwaddstr(window, MID_Y + 7, MENU_MID_X, "  Join Game");
-        mvwaddstr(window, MID_Y + 8, MENU_MID_X, "  How to Play");
+        mvwprintw(window, MID_Y + 7, MENU_MID_X, "  Join Game");
+        mvwprintw(window, MID_Y + 8, MENU_MID_X, "  How to Play");
         wattron(window, COLOR_PAIR(OPTIONS_COL));
-        mvwaddstr(window, MID_Y + 9, MENU_MID_X, "> Exit");
+        mvwprintw(window, MID_Y + 9, MENU_MID_X, "> Exit");
         wattroff(window, COLOR_PAIR(OPTIONS_COL));
     }
 

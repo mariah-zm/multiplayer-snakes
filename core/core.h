@@ -8,9 +8,10 @@
 
 #define PORT            5577
 
-#define MAP_HEIGHT      23    // default height of window - one line for score
-#define MAP_WIDTH       80
-#define MAP_SIZE        (MAP_HEIGHT * MAP_WIDTH * sizeof(int))
+#define MAP_D_HEIGHT    24      // extra row to hold data in it
+#define MAP_HEIGHT      23      // default height of window - one row for data
+#define MAP_WIDTH       80      // default width of window
+#define MAP_SIZE        (MAP_D_HEIGHT * MAP_WIDTH * sizeof(int))
 
 // Keyboard keys for directions
 #define UP_KEY          'W'
@@ -22,16 +23,15 @@
 #define EMPTY           0
 #define FRUIT           100 
 
-// To change to indices
-// #define MAP_DATA        0
-// #define P_NUM_DATA      1
-// #define SCORE_DATA      2
-// #define ENDGAME_DATA    3
-// #define DEAD_DATA       4
+// Indices for data elements
+#define DATA_ROW            (MAP_HEIGHT) // 23
+#define SCORE_IDX           0            
+#define PNUM_IDX            1           // Dead if value at idx is -1
+#define WINNER_IDX          2
 
 #include <stddef.h>
 
-typedef int game_map_t[MAP_HEIGHT][MAP_WIDTH];
+typedef int game_map_t[MAP_D_HEIGHT][MAP_WIDTH];
 
 typedef enum log_type
 {

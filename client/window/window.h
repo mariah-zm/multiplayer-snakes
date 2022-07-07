@@ -38,6 +38,6 @@ void show_instructions(WINDOW *window);
 
 void show_winner(int game_status);
 
-void show_game_screen(WINDOW *window, game_map_t map, size_t score);
+void show_game_screen(WINDOW *window, game_map_t map);
 
 #endif

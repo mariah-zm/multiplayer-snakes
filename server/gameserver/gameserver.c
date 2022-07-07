@@ -19,8 +19,8 @@ bool write_to_client(game_map_t map, int client_socket);
 bool write_value_to_client(size_t value, int client_socket);
 bool write_map_to_client(game_map_t map, int client_socket);
 void *fruit_thread_fn(void *arg);
+void add_player_data(game_t *game, snake_t *snake, game_map_t *client_map);
 void *handle_client_connection(void *arg);
-void *say_hello(void *arg);
 
 void init_game_server(game_server_data_t *server_data)
 {
@@ -163,7 +163,7 @@ void *handle_client_input(void *arg)
     game_t *game = data->game;
     snake_t *snake = data->snake;
     int fd = data->client_socket;
-    size_t player_num = snake->player_num;
+    int player_num = snake->player_num;
 
     // Values for client input
     char key_buffer, new_dir;
@@ -177,8 +177,9 @@ void *handle_client_input(void *arg)
         if (read(fd, &key_buffer, 1) < 0)
         {
             char msg[100];
-            sprintf(msg, "Could not read input from player %ld", player_num);
+            sprintf(msg, "Could not read input from player %d", player_num);
             logger(ERROR, msg);
+            snake->status = DISCONNECTED;
             break;
         }
 
@@ -199,14 +200,31 @@ void *handle_client_input(void *arg)
     return 0;
 }
 
+void add_player_data(game_t *game, snake_t *snake, game_map_t *client_map)
+{
+    memcpy(client_map, game->map, MAP_SIZE);
+
+    // Setting score
+    (*client_map)[DATA_ROW][SCORE_IDX] = snake->length - 2;
+
+    // Setting player's number
+    if (snake->status == DEAD)
+        (*client_map)[DATA_ROW][PNUM_IDX] = -1;
+    else 
+        (*client_map)[DATA_ROW][PNUM_IDX] = snake->player_num;
+
+    // Setting winner's number, if any
+    (*client_map)[DATA_ROW][WINNER_IDX] = game->winner;
+}
+
 void *handle_client_connection(void *arg)
 {
     client_conn_data_t *data = (client_conn_data_t *) arg;
     
     // For quick access
     game_t *game = data->game;
-    int fd = data->client_socket;
-    int player_num = fd-3;
+    int client_socket = data->client_socket;
+    int player_num = client_socket-3;
 
     char msg[100];
     sprintf(msg, "Player %d has joined", player_num);
@@ -226,23 +244,23 @@ void *handle_client_connection(void *arg)
     data->snake = add_player(game, player_num);
     snake_t *snake = data->snake;
 
-    // TODO Send player num
-
-
     // Time structure for sleep
     struct timespec ts;
     ts.tv_sec = 0;
-    ts.tv_nsec = 300000000L; // every 0.3s, snakes move
+    ts.tv_nsec = 150000000L; // every 0.15s, snakes move
 
     do 
     {
-        if (!write_to_client(game->map, fd))
+        move_player(game, snake);
+
+        game_map_t map_to_send;
+        add_player_data(game, snake, &map_to_send);
+
+        if (!write_to_client(map_to_send, client_socket))
         {
             snake->status = DISCONNECTED;
             break;
         }
-
-        move_player(game, snake);
 
         nanosleep(&ts, NULL);
 
@@ -273,7 +291,7 @@ void *handle_client_connection(void *arg)
 
     // Clean up player data
     remove_player(game, snake);
-    close(fd);
+    close(client_socket);
     free(data);
 
     return 0;

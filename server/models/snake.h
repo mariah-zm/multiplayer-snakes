@@ -9,7 +9,7 @@
 
 typedef struct snake 
 {
-    size_t player_num;
+    int player_num;
     size_t length;
     player_status_t status;
     pthread_mutex_t lock;
@@ -18,7 +18,7 @@ typedef struct snake
     coordinate_t body[MAX_SNAKE_LEN-2];
 } snake_t;
 
-snake_t *create_snake(size_t player_num, coordinate_t head);
+snake_t *create_snake(int player_num, coordinate_t head);
 
 void destroy_snake(snake_t *snake);
 

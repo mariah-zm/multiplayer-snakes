@@ -21,7 +21,7 @@ game_t *create_game(void);
 
 void add_fruit(game_t *game);
 
-snake_t *add_player(game_t *game, size_t player_num);
+snake_t *add_player(game_t *game, int player_num);
 
 void remove_player(game_t *game, snake_t *snake);
 

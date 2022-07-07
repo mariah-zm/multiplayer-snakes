@@ -19,7 +19,7 @@ game_t *create_game(void)
     memset(&game->map, EMPTY, MAP_SIZE);
 
     game->is_running = true;
-    game->winner = 0;
+    game->winner = -2;
     game->num_players = 0;
 
     if (pthread_mutex_init(&game->lock, NULL) != 0)
@@ -39,7 +39,7 @@ void add_fruit(game_t *game)
 }
 
 
-snake_t *add_player(game_t *game, size_t player_num)
+snake_t *add_player(game_t *game, int player_num)
 {
     // Getting a valid position of snake's head
     coordinate_t head = get_random_coordinate();
@@ -98,8 +98,12 @@ void move_player(game_t *game, snake_t *snake)
     update_map_coordinate(game, snake->body[0], snake->player_num);
     update_map_coordinate(game, old_tail, EMPTY);
 
+    // Checking if player is a winner
     if (snake->length == 15)
-        snake->status = WINNER;   
+    {
+        snake->status = WINNER;
+        game->winner = snake->player_num;
+    }       
 }
 
 // Function for a snake to eat a fruit in front of it

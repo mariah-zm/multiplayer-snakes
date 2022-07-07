@@ -131,7 +131,23 @@ void *update_game(void *arg)
             break;
         }
 
-        show_game_screen(game->window, game->map, game->score);
+        game->player_num = game->map[DATA_ROW][PNUM_IDX];
+
+        // Setting player status according to data received
+        if (game->player_num  == DEAD)
+            game->player_status = DEAD;
+        
+        // Checking if game is finished because someone won
+        int winner = game->map[DATA_ROW][WINNER_IDX];
+        if (winner > 0)
+        {
+            if (winner == game->player_num)
+                game->player_status = WINNER;
+            else
+                game->player_status = LOSER;
+        }
+
+        show_game_screen(game->window, game->map);
     }
 
     return 0;
