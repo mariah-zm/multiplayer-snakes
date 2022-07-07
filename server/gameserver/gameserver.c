@@ -247,7 +247,6 @@ void *handle_client_connection(void *arg)
     // Time structure for sleep
     struct timespec ts;
     ts.tv_sec = 0;
-    // ts.tv_nsec = 0;
     ts.tv_nsec = PLAYING_SPEED * 10000000L; // every 0.15s, snakes move
 
     do 
