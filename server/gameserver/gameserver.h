@@ -4,6 +4,7 @@
 #define MAX_PLAYERS     1000
 
 #include "../models/game.h"
+#include "../../core/core.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -22,6 +23,12 @@ typedef struct client_conn_data
     snake_t *snake;
     int client_socket;
 } client_conn_data_t;
+
+typedef struct data_to_send
+{
+    communication_data_t data;
+    int client_socket_fd;
+} data_to_send_t;
 
 void init_game_server(game_server_data_t *server_data);
 

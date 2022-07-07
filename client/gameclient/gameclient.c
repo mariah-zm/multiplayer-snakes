@@ -17,7 +17,7 @@
 // Private functions declarations
 void *update_game(void *arg);
 void write_to_server(int client_socket, char key);
-bool read_from_server(int client_socket, game_map_t *map);
+bool read_from_server(int client_socket, game_data_t *game_data);
 bool is_key_valid(char key);
 
 int open_client_connection(char *hostname)
@@ -120,7 +120,7 @@ void *update_game(void *arg)
     while (game->game_status == ONGOING)
     {
         // Recieve updated map from server
-        if (!read_from_server(game->client_socket, &game->map))
+        if (!read_from_server(game->client_socket, game))
         {
             game->game_status = END;
             break;
@@ -138,19 +138,49 @@ void write_to_server(int client_socket, char key)
         exit_error("Could not write to socket");
 }
 
-bool read_from_server(int client_socket, game_map_t *map)
+bool read_from_server(int client_socket, game_data_t *game_data)
 {
-    char map_buffer[MAP_SIZE];
-    int bytes_read = 0, n;
+    int data_type;
+    char *buffer = (char *) &data_type;
+    size_t const SIZE = sizeof(data_type);
 
-    while(bytes_read < MAP_SIZE){
-        n = read(client_socket, map_buffer + bytes_read, MAP_SIZE - bytes_read);
-        if(n <= 0)
+    size_t bytes_read = 0, n;
+
+    while (bytes_read < SIZE)
+        bytes_read += read(client_socket, buffer + bytes_read, SIZE-bytes_read);
+
+    // Reset bytes_read for actual data
+    bytes_read = 0;
+
+    char *data_buffer;
+    size_t data_size;
+        
+    switch (data_type)
+    {
+        case MAP_DATA:
+        {
+            data_buffer = (char *) &game_data->map;
+            data_size = MAP_SIZE;
+            break;
+        }
+        
+        case P_NUM_DATA:
+        {
+            data_buffer = (char *) &game_data->player_num;
+            data_size = sizeof(game_data->player_num);
+            break;
+        }
+        default: 
+            return false;
+    }
+
+    while (bytes_read < SIZE)
+    {    
+        n = read(client_socket, data_buffer + bytes_read, data_size - bytes_read);
+        if (n <=0)
             return false;
         bytes_read += n;
     }
-
-    memcpy(map, map_buffer, MAP_SIZE);
 
     return true;
 }

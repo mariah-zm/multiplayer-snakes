@@ -22,15 +22,40 @@
 #define EMPTY           0
 #define FRUIT           100 
 
+// Values for network communication data
+#define MAP_DATA        0
+#define P_NUM_DATA      1
+#define SCORE_DATA      2
+#define ENDGAME_DATA    3
+#define DEAD_DATA       4
+#define MSG_DATA        5
+
+#define MSG_SIZE        25
+
 #include <stddef.h>
+
+typedef int game_map_t[MAP_HEIGHT][MAP_WIDTH];
+
+typedef union data 
+{
+    game_map_t *map;
+    size_t player_num;
+    size_t score; 
+    size_t winner;
+    char msg[MSG_SIZE];
+} data_t;
+
+typedef struct communication_data
+{
+    size_t type;
+    data_t data;
+} communication_data_t;
 
 typedef enum log_type
 {
     ERROR,
     INFO
 } log_type_t;
-
-typedef int game_map_t[MAP_HEIGHT][MAP_WIDTH];
 
 void exit_error(char *msg);
 
