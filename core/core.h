@@ -1,8 +1,10 @@
 /**
  * @file   core.h
  * @author Mariah Zammit
- * @brief  For data, types and functions shared between server and client
+ * @brief  Contains data, types and functions that are common between server and
+ *         client
  */
+
 #ifndef INCLUDED_CORE_
 #define INCLUDED_CORE_
 

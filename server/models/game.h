@@ -1,3 +1,9 @@
+/**
+ * @file   game.h
+ * @author Mariah Zammit
+ * @brief  Model class for the game state
+ */
+
 #ifndef INCLUDED_GAME_
 #define INCLUDED_GAME_
 

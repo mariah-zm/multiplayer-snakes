@@ -1,3 +1,10 @@
+/**
+ * @file   window.h
+ * @author Mariah Zammit
+ * @brief  Contains functions related to the game graphics and menus, and 
+ *         modifying the game window
+ */
+
 #ifndef INCLUDED_WINDOW_
 #define INCLUDED_WINDOW
 

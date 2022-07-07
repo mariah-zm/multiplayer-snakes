@@ -1,3 +1,10 @@
+/**
+ * @file   gameserver.h
+ * @author Mariah Zammit
+ * @brief  Contains definitions and functions to start up the game server,
+ *         handle client connections, as well as keep track of the game state
+ */
+
 #ifndef INCLUDED_GAMESRVER_
 #define INCLUDED_GAMESRVER_
 

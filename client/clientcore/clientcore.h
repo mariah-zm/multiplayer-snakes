@@ -1,3 +1,10 @@
+/**
+ * @file   clientcore.h
+ * @author Mariah Zammit
+ * @brief  Contains type definitions and functions that are available to all 
+ *         files in the game client
+ */
+
 #ifndef INCLUDED_CLIENTCORE_
 #define INCLUDED_CLIENTCORE_
 

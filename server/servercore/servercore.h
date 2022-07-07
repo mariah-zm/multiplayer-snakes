@@ -1,3 +1,10 @@
+/**
+ * @file   servercore.h
+ * @author Mariah Zammit
+ * @brief  Contains type definitions and functions that are available to all 
+ *         files in the game server
+ */
+
 #ifndef INCLUDED_SERVERCORE_
 #define INCLUDED_SERVERCORE_
 

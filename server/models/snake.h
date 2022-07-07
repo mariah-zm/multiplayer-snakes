@@ -1,3 +1,9 @@
+/**
+ * @file   snake.h
+ * @author Mariah Zammit
+ * @brief  Model class for the representing a snake
+ */
+
 #ifndef INCLUDED_SNAKE_
 #define INCLUDED_SNAKE_
 
