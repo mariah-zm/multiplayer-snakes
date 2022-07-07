@@ -6,6 +6,8 @@
 // Private functions declarations
 void update_map_coordinate(game_t *game, coordinate_t coord, int value);
 int value_at_coordindate(game_map_t map, coordinate_t coord);
+direction_t get_random_direction(void);
+coordinate_t get_random_coordinate(void);
 bool is_coord_valid(game_map_t map, coordinate_t coord, int type);
 bool is_head_valid(game_map_t map, coordinate_t head);
 bool is_collided(game_map_t map, coordinate_t snake_head);
@@ -26,6 +28,13 @@ game_t *create_game(void)
         exit_error("Failed to initialise mutex for game map");
 
     return game;
+}
+
+void destroy_game(game_t *game)
+{
+    pthread_mutex_destroy(&game->lock);
+    free(game);
+    game = NULL;
 }
 
 void reset_game(game_t *game)
@@ -143,6 +152,35 @@ void update_map_coordinate(game_t *game, coordinate_t coord, int value)
 int value_at_coordindate(game_map_t map, coordinate_t coord)
 {
     return map[coord.y][coord.x];
+}
+
+direction_t get_random_direction(void)
+{
+    int rand_num = rand() % 4;
+
+    switch (rand_num)
+    {
+        case 0:
+            return UP;
+        case 1:
+            return LEFT;
+        case 2:
+            return DOWN;
+        case 3:    
+        default:            // Required for no warnings       
+            return RIGHT;
+    }
+}
+
+coordinate_t get_random_coordinate(void)
+{
+    coordinate_t coord;
+    // Generating random location away from border
+    coord.x = rand() % (MAP_WIDTH - 4) + 2;
+    coord.y = rand() % (MAP_HEIGHT - 4) + 2;
+    coord.direction = get_random_direction();
+
+    return coord;
 }
 
 bool is_coord_valid(game_map_t map, coordinate_t coord, int type)

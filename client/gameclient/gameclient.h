@@ -17,7 +17,7 @@
 
 #include "../window/window.h"
 
-int open_client_connection(char *hostname);
+int open_client_connection(WINDOW *window, char *hostname);
 
 void close_client_connection(int client_socket);
 

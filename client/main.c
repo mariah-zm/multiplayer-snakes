@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
         if (option == OPT_PLAY)
         {
-            int client_socket = open_client_connection(argv[1]);
+            int client_socket = open_client_connection(game_window, argv[1]);
             handle_client_connection(client_socket, game_window);
             close_client_connection(client_socket);
         }

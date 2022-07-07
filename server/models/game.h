@@ -25,6 +25,8 @@ typedef struct game
 
 game_t *create_game(void);
 
+void destroy_game(game_t *game);
+
 void reset_game(game_t *game);
 
 void add_fruit(game_t *game);

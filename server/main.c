@@ -19,8 +19,5 @@ int main(void)
     // Start game server and start accepting connections
     start_game_server(&game_server);
 
-    // Close server socket on termination
-    close_game_server(&game_server);  
-
     return 0; 
 }

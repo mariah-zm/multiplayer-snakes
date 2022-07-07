@@ -5,8 +5,8 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 project(server)
 
-set(SOURCE_FILES models/game.c models/snake.c gameserver/gameserver.c 
-        ../core/core.c servercore/servercore.c)
+set(SOURCE_FILES models/game.c models/snake.c 
+                gameserver/gameserver.c ../core/core.c)
 
 add_executable(snakes-server main.c ${SOURCE_FILES})
 

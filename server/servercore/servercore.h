@@ -35,8 +35,4 @@ typedef enum player_status
     DISCONNECTED
 } player_status_t;
 
-direction_t get_random_direction(void);
-
-coordinate_t get_random_coordinate(void);
-
 #endif

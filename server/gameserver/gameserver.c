@@ -68,13 +68,10 @@ void start_game_server(game_server_data_t *server_data)
     game_t *game = create_game();
 
     // Start thread for adding fruit at random intervals
-    pthread_t fruitThread;
-    void *threadRet;
+    make_detached_thread(fruit_thread_fn, game); 
 
-    if (pthread_create(&fruitThread, NULL, fruit_thread_fn, game) != 0)
-        exit_error("Failed to start fruit thread in game server");
-
-    for (int i = 0; ; ++i)
+    int i = 0;
+    while (true)
     {
         // Accepting an incoming connection request
         server_data->client_socket_fds[i] =
@@ -82,7 +79,10 @@ void start_game_server(game_server_data_t *server_data)
                 (struct sockaddr *) &server_data->client_addrs[i], &client_len);
 
         if (server_data->client_socket_fds[i] < 0) 
+        {
             logger(ERROR, "Could not accept client");
+            continue;
+        }   
 
         // Handling client connection in separate thread
         client_conn_data_t *conn_data = (client_conn_data_t *) malloc(sizeof(client_conn_data_t));
@@ -91,13 +91,10 @@ void start_game_server(game_server_data_t *server_data)
         conn_data->client_socket = server_data->client_socket_fds[i];
 
         make_detached_thread(handle_client_connection, conn_data); 
+        ++i;
     }
 
-    // Wait for fruit thread to finish
-    if (pthread_join(fruitThread, &threadRet) != 0)
-        logger(ERROR, "Failed to join fruit thread in game server");
-
-    free(game);
+    destroy_game(game);
 }
 
 void server_signal_handler()
@@ -155,8 +152,8 @@ void *fruit_thread_fn(void *arg)
         {        
             add_fruit(game);
 
-            // Creating random intervals between 3 and 6 seconds
-            int milli_seconds = (rand() % 3000) + 3000;
+            // Creating random intervals between 3 and 5 seconds
+            int milli_seconds = (rand() % 2000) + 3000;
             struct timespec ts;
             ts.tv_sec = milli_seconds / 1000;
             ts.tv_nsec = (milli_seconds % 1000) * 1000000L; // range 0 to 999999999
@@ -241,14 +238,7 @@ void *handle_client_connection(void *arg)
     logger(INFO, msg);
 
     // Start thread to receive client input
-    pthread_t inputThread;
-    void *threadRet;
-
-    if (pthread_create(&inputThread, NULL, handle_client_input, data) != 0)
-    {
-        logger(ERROR, "Failed to start input thread for player in game server");
-        return 0;
-    }
+    make_detached_thread(handle_client_input, data);
     
     // Create snake structure
     data->snake = add_player(game, player_num);
@@ -298,10 +288,6 @@ void *handle_client_connection(void *arg)
         sprintf(msg, "Player %d died", player_num);
         logger(INFO, msg);
     }    
-
-    // Wait for input thread to finish
-    if (pthread_join(inputThread, &threadRet) != 0)
-        logger(ERROR, "Failed to join fruit thread in game server");
 
     // Clean up player data
     remove_player(game, snake);

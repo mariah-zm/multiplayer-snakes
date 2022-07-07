@@ -19,8 +19,9 @@ void *update_game(void *arg);
 void write_to_server(int client_socket, char key);
 bool read_from_server(int client_socket, game_map_t *map);
 bool is_key_valid(char key);
+void exit_client(WINDOW *window, char *msg);
 
-int open_client_connection(char *hostname)
+int open_client_connection(WINDOW *window, char *hostname)
 {
     int socket_fd;
     struct sockaddr_in serv_addr;
@@ -28,14 +29,14 @@ int open_client_connection(char *hostname)
 
     // Creating client socket
     if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        exit_error("Could not open client socket");
+        exit_client(window, "Could not open client socket");
      
     // Resolving server name
     if ((server = gethostbyname(hostname)) == NULL) {
 		close(socket_fd);
         char err_msg[30];
         sprintf(err_msg, "No such host %s", hostname);
-        exit_error(err_msg);
+        exit_client(window, err_msg);
     }
 
     // Populating serv_addr structure 
@@ -54,7 +55,7 @@ int open_client_connection(char *hostname)
     if (connect(socket_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
     {
 		close(socket_fd);
-        exit_error("Could not connect to server");
+        exit_client(window, "Could not connect to server");
     }
 
     return socket_fd;
@@ -70,17 +71,16 @@ void handle_client_connection(int client_socket, WINDOW *window)
     // Populate data required for gameplay
     game_data_t game_data;
     game_data.client_socket = client_socket;
-    game_data.score = 0;
     game_data.window = window;
     game_data.player_status = PLAYING;
 
     char key_buffer;
 
     // Start updating the screen from received map data
-    pthread_t updateThread;
+    pthread_t update_thread;
     void *threadRet;
 
-    if (pthread_create(&updateThread, NULL, update_game, &game_data) != 0)
+    if (pthread_create(&update_thread, NULL, update_game, &game_data) != 0)
     {
         logger(ERROR, "Failed to start input thread for player in game server");
         return;
@@ -106,7 +106,7 @@ void handle_client_connection(int client_socket, WINDOW *window)
     } while (key_pressed != QUIT && game_data.player_status == PLAYING);
 
     // Wait for update thread to finish
-    if (pthread_join(updateThread, &threadRet) != 0)
+    if (pthread_join(update_thread, &threadRet) != 0)
         logger(ERROR, "Failed to join update thread in game server");
 }
 
@@ -190,4 +190,10 @@ bool is_key_valid(char key)
 {
     return key == UP_KEY || key == DOWN_KEY || key == LEFT_KEY 
         || key == RIGHT_KEY || key == QUIT;
+}
+
+void exit_client(WINDOW *window, char *msg)
+{
+    destroy_game_window(window);
+    exit_error(msg);
 }

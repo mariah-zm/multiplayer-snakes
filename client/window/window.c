@@ -16,6 +16,8 @@ size_t const MID_Y = (WIN_HEIGHT-WELCOME_HEIGTH)/2;
 size_t const MENU_WIDTH = 13;
 size_t const MENU_MID_X = (WIN_WIDTH-MENU_WIDTH)/2;
 
+// Private function decalarations
+void get_colour_str(int player_num, char *ret_colour);
 void print_title(WINDOW *window);
 void print_menu(WINDOW *window, size_t option);
 void print_instructions(WINDOW *window);
@@ -119,9 +121,15 @@ void show_game(WINDOW *window, game_map_t map)
 {    
     werase(window);
 
+    char colour[10];
+    get_colour_str(map[DATA_ROW][PNUM_IDX], colour);
+
+    char msg[30];
+    sprintf(msg, "You are snake %s ", colour);
+
     // Print header with score
     wattron(window, COLOR_PAIR(SCORE_COL));
-    mvwprintw(window, 0, 0, "Score: %d %71s", map[DATA_ROW][SCORE_IDX], " ");
+    mvwprintw(window, 0, 0, "Score: %d %71s", map[DATA_ROW][SCORE_IDX], msg);
     wattroff(window, COLOR_PAIR(SCORE_COL));
 
     // Printing values in map (ignoring data row)
@@ -130,7 +138,7 @@ void show_game(WINDOW *window, game_map_t map)
         for (size_t x = 0; x < MAP_WIDTH; ++x)
         {
             int current_value = map[y][x];
-            int colour = abs(current_value) % 7;
+            int colour = (abs(current_value) % 7) + 1;
 
             if (current_value == FRUIT)
             {
@@ -291,4 +299,36 @@ void update_menu(WINDOW *window, size_t option)
     }
 
     wrefresh(window);
+}
+
+void get_colour_str(int player_num, char *ret_colour)
+{
+    int colour_val = (player_num % 7) + 1;
+
+    switch (colour_val)
+    {
+        case 1:
+            strcpy(ret_colour, "green");
+            break;
+        case 2:
+            strcpy(ret_colour, "blue");
+            break;
+        case 3:
+            strcpy(ret_colour, "yellow");
+            break;
+        case 4:
+            strcpy(ret_colour, "red");
+            break;
+        case 5:
+            strcpy(ret_colour, "magenta");
+            break;
+        case 6:
+            strcpy(ret_colour, "cyan");
+            break;
+        case 7:
+            strcpy(ret_colour, "white");
+            break;
+        
+        default: break; // Required for no warnings
+    }
 }
