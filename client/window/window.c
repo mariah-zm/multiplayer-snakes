@@ -172,6 +172,8 @@ void show_message(WINDOW *window, char *msg)
     wattroff(window, COLOR_PAIR(SCORE_COL)); 
 
     wrefresh(window);
+
+    sleep(2);
 }
 
 /*****************************************************************************

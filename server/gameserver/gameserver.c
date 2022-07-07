@@ -83,12 +83,7 @@ void start_game_server(game_server_data_t *server_data)
         if (server_data->client_socket_fds[i] < 0) 
             logger(ERROR, "Could not accept client");
 
-        // Reset game if someone won
-        if (!game->is_running)
-        {
-            game->is_running = true;
-        }
-
+        // Handling client connection in separate thread
         client_conn_data_t *conn_data = (client_conn_data_t *) malloc(sizeof(client_conn_data_t));
         conn_data->game = game;
         conn_data->snake = NULL;
@@ -247,7 +242,7 @@ void *handle_client_connection(void *arg)
     // Time structure for sleep
     struct timespec ts;
     ts.tv_sec = 0;
-    ts.tv_nsec = 150000000L; // every 0.15s, snakes move
+    ts.tv_nsec = PLAYING_SPEED * 10000000L; // every 0.15s, snakes move
 
     do 
     {
@@ -264,13 +259,16 @@ void *handle_client_connection(void *arg)
 
         nanosleep(&ts, NULL);
 
-    } while (game->is_running && snake->status == PLAYING);
+    } while (snake->status == PLAYING);
 
+    // Reset game if we have a winner
     if (snake->status == WINNER)
     {
         char msg[100];
         sprintf(msg, "Player %d won!", player_num);
         logger(INFO, msg);
+
+        reset_game(game);
     }
     else if (snake->status == DISCONNECTED)
     {

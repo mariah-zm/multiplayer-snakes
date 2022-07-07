@@ -3,6 +3,9 @@
 
 #define MAX_PLAYERS     1000
 
+// Controls how often snakes move forward - value should be between 1 and 99
+#define PLAYING_SPEED   15      
+
 #include "../models/game.h"
 #include "../../core/core.h"
 

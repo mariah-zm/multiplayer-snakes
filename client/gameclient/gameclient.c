@@ -96,7 +96,8 @@ void handle_client_connection(int client_socket, WINDOW *window)
         // Getting user input and only sending valid keys
         key_pressed = toupper(wgetch(window));
 
-        if (is_key_valid(key_pressed))
+        // DO not send if no longer in game
+        if (is_key_valid(key_pressed) && game_data.player_status == PLAYING)
             write_to_server(client_socket, key_pressed);
         
         if (key_pressed == QUIT)

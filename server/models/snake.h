@@ -1,7 +1,7 @@
 #ifndef INCLUDED_SNAKE_
 #define INCLUDED_SNAKE_
 
-#define MAX_SNAKE_LEN   5
+#define MAX_SNAKE_LEN   15
 
 #include "../servercore/servercore.h"
 

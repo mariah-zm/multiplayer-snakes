@@ -6,7 +6,7 @@
 #ifndef INCLUDED_CORE_
 #define INCLUDED_CORE_
 
-#define PORT            5577
+#define PORT            5566
 
 #define MAP_D_HEIGHT    24      // extra row to hold data in it
 #define MAP_HEIGHT      23      // default height of window - one row for data

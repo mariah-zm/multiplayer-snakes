@@ -19,6 +19,8 @@ typedef struct game
 
 game_t *create_game(void);
 
+void reset_game(game_t *game);
+
 void add_fruit(game_t *game);
 
 snake_t *add_player(game_t *game, int player_num);
